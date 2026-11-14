@@ -8,18 +8,8 @@ import {
   Volume2,
   Check,
   Languages,
-  BookOpen,
   ArrowUp,
-  ArrowDown,
-  ChevronDown,
-  ChevronUp,
-  CheckCircle2,
-  Circle,
-  X,
-  BrainCircuit,
-  RotateCcw,
-  BookmarkCheck,
-  Layers
+  X
 } from 'lucide-react';
 import { DocumentItem, VocabularyItem, WordRelationItem } from '../types';
 import { lookupAndAutoSaveWord, updateReadingProgress } from '../lib/api';
@@ -55,10 +45,11 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
   const [scrollProgress, setScrollProgress] = useState<number>(0);
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
 
-  // Compact Notebook Panel states
-  const [panelPosition, setPanelPosition] = useState<'bottom' | 'top'>('bottom');
-  const [isDetailsExpanded, setIsDetailsExpanded] = useState<boolean>(false);
-  const [audioSpeed, setAudioSpeed] = useState<number>(0.85);
+  // Mobile contextual inline popup positioning
+  const [popupAlign, setPopupAlign] = useState<'center' | 'left' | 'right'>('center');
+  const [popupVertical, setPopupVertical] = useState<'above' | 'below'>('above');
+  const [loadingWord, setLoadingWord] = useState<string | null>(null);
+  const audioSpeed = 0.85;
 
   const contentScrollRef = useRef<HTMLDivElement>(null);
 
@@ -104,12 +95,34 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
     }
   };
 
-  // Handle word click
-  const handleWordClick = async (rawWord: string, surroundingSentence: string) => {
+  // Handle word click with collision detection for mobile inline popup
+  const handleWordClick = async (rawWord: string, surroundingSentence: string, e?: React.MouseEvent) => {
     const clean = rawWord.replace(/[^a-zA-Z]/g, '').trim().toLowerCase();
     if (!clean) return;
 
     setActiveWord(clean);
+    setLoadingWord(clean);
+
+    if (e && e.currentTarget) {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 400;
+
+      // Safe collision check for mobile screen edges
+      if (rect.left < 110) {
+        setPopupAlign('left');
+      } else if (screenWidth - rect.right < 110) {
+        setPopupAlign('right');
+      } else {
+        setPopupAlign('center');
+      }
+
+      // Check vertical position - if too close to top bar, flip below the word
+      if (rect.top < 140) {
+        setPopupVertical('below');
+      } else {
+        setPopupVertical('above');
+      }
+    }
 
     // Instant audio pronunciation
     speakEnglishText(clean, { rate: audioSpeed });
@@ -124,8 +137,16 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
       onWordSelected(vocab);
     } catch (err) {
       console.error('Word lookup failed:', err);
+    } finally {
+      setLoadingWord(null);
     }
   };
+
+  // Synonyms from selected vocab
+  let synonyms: WordRelationItem[] = selectedWordVocab?.synonyms || [];
+  if (synonyms.length === 0 && selectedWordVocab?.synonyms_json) {
+    try { synonyms = JSON.parse(selectedWordVocab.synonyms_json); } catch {}
+  }
 
   // Tokenize paragraph into clickable interactive words and sentence translation triggers
   const renderParagraphContent = (paragraphText: string) => {
@@ -138,7 +159,7 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
       return (
         <span 
           key={sIdx} 
-          className="group/sentence relative rounded px-1 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30"
+          className="group/sentence relative rounded px-0.5 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30"
         >
           {tokens.map((token, tIdx) => {
             const isWord = /^[a-zA-Z]+$/.test(token.trim());
@@ -150,21 +171,143 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
             const isSaved = savedWordsSet.has(lower);
             const isLearned = learnedWordsSet.has(lower);
             const isActive = (selectedWordVocab && selectedWordVocab.word.toLowerCase() === lower) || activeWord === lower;
+            const isCurrentActive = activeWord === lower;
 
             return (
               <span
                 key={tIdx}
-                onClick={() => handleWordClick(token, sentence.trim())}
-                className={`reader-word ${isActive ? 'active-word' : ''} ${
-                  isLearned 
-                    ? 'learned-word text-emerald-800 dark:text-emerald-300 font-semibold' 
-                    : isSaved 
-                    ? 'saved-word text-indigo-700 dark:text-indigo-300 font-medium' 
-                    : 'text-slate-800 dark:text-slate-100'
-                }`}
-                title="Tap for Bengali pronunciation, meaning, synonyms & antonyms"
+                className="relative inline-block align-baseline"
               >
-                {token}
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleWordClick(token, sentence.trim(), e);
+                  }}
+                  className={`reader-word cursor-pointer ${isActive ? 'active-word font-semibold text-indigo-600 dark:text-indigo-400' : ''} ${
+                    isLearned 
+                      ? 'learned-word text-emerald-800 dark:text-emerald-300 font-semibold' 
+                      : isSaved 
+                      ? 'saved-word text-indigo-700 dark:text-indigo-300 font-medium' 
+                      : 'text-slate-800 dark:text-slate-100'
+                  }`}
+                  title="Tap for Bengali pronunciation & meaning"
+                >
+                  {token}
+                </span>
+
+                {/* Mobile-only inline contextual note / speech-bubble directly above or below the tapped word */}
+                {isCurrentActive && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className={`lg:hidden absolute z-50 ${
+                      popupVertical === 'below' 
+                        ? 'top-[calc(100%+8px)]' 
+                        : 'bottom-[calc(100%+8px)]'
+                    } ${
+                      popupAlign === 'left' 
+                        ? 'left-0' 
+                        : popupAlign === 'right' 
+                        ? 'right-0' 
+                        : 'left-1/2 -translate-x-1/2'
+                    } w-60 sm:w-64 max-w-[85vw] rounded-2xl bg-slate-900/95 dark:bg-slate-900/98 text-white p-2.5 shadow-2xl backdrop-blur-md border border-slate-700/60 select-none animate-in fade-in zoom-in-95 duration-150`}
+                  >
+                    {/* Speech bubble caret pointing directly at the word */}
+                    <div
+                      className={`absolute ${
+                        popupVertical === 'below' 
+                          ? '-top-1.5 border-t border-l' 
+                          : '-bottom-1.5 border-b border-r'
+                      } ${
+                        popupAlign === 'left' 
+                          ? 'left-4' 
+                          : popupAlign === 'right' 
+                          ? 'right-4' 
+                          : 'left-1/2 -translate-x-1/2'
+                      } w-3 h-3 bg-slate-900 dark:bg-slate-900 rotate-45 border-slate-700/60`}
+                    />
+
+                    {loadingWord === lower && (!selectedWordVocab || selectedWordVocab.word.toLowerCase() !== lower) ? (
+                      <div className="flex items-center gap-2 py-1 px-1">
+                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent shrink-0" />
+                        <span className="text-xs text-slate-300 bengali-text">বাংলা অর্থ ও উচ্চারণ খোঁজা হচ্ছে...</span>
+                      </div>
+                    ) : selectedWordVocab && selectedWordVocab.word.toLowerCase() === lower ? (
+                      <div className="space-y-1.5">
+                        {/* Header: Pronunciation & Audio & Close */}
+                        <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                speakEnglishText(selectedWordVocab.word, { rate: audioSpeed });
+                              }}
+                              className="shrink-0 p-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-transform active:scale-90"
+                              title="Listen"
+                            >
+                              <Volume2 className="h-3.5 w-3.5" />
+                            </button>
+
+                            <div className="min-w-0 flex items-baseline gap-1">
+                              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold shrink-0">উচ্চারণ:</span>
+                              <span className="bengali-text font-bold text-amber-300 text-xs sm:text-sm tracking-wide truncate">
+                                {selectedWordVocab.bengali_pronunciation}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveWord(null);
+                              onClearSelectedWord?.();
+                            }}
+                            className="shrink-0 text-slate-400 hover:text-white p-1 rounded-md hover:bg-slate-800"
+                            title="Close"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Bengali Meaning */}
+                        <div className="pt-1 border-t border-slate-800/80 flex items-baseline gap-1">
+                          {selectedWordVocab.part_of_speech && (
+                            <span className="text-[10px] text-indigo-300 font-semibold italic shrink-0">
+                              ({selectedWordVocab.part_of_speech})
+                            </span>
+                          )}
+                          <span className="bengali-text font-bold text-xs sm:text-sm text-slate-100 line-clamp-2 leading-snug">
+                            {selectedWordVocab.bengali_meaning}
+                          </span>
+                        </div>
+
+                        {/* Synonyms Preview (if available) */}
+                        {synonyms.length > 0 && (
+                          <div className="pt-0.5 text-[10px] text-emerald-300/90 flex items-center gap-1 truncate">
+                            <span className="font-semibold text-emerald-400 shrink-0">Syn:</span>
+                            <span className="truncate">{synonyms.slice(0, 3).map(s => s.word).join(', ')}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between text-xs text-slate-300">
+                        <span className="capitalize font-semibold">{token}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveWord(null);
+                            onClearSelectedWord?.();
+                          }}
+                          className="text-slate-400 hover:text-white"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </span>
             );
           })}
@@ -198,206 +341,6 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
     base: 'text-base sm:text-lg leading-loose sm:leading-loose',
     lg: 'text-lg sm:text-xl leading-loose sm:leading-loose',
     xl: 'text-xl sm:text-2xl leading-loose sm:leading-loose',
-  };
-
-  // Synonyms and antonyms from selected vocab
-  let synonyms: WordRelationItem[] = selectedWordVocab?.synonyms || [];
-  let antonyms: WordRelationItem[] = selectedWordVocab?.antonyms || [];
-  if (synonyms.length === 0 && selectedWordVocab?.synonyms_json) {
-    try { synonyms = JSON.parse(selectedWordVocab.synonyms_json); } catch {}
-  }
-  if (antonyms.length === 0 && selectedWordVocab?.antonyms_json) {
-    try { antonyms = JSON.parse(selectedWordVocab.antonyms_json); } catch {}
-  }
-
-  // Render the Compact Notebook Reading Bar
-  const renderNotebookReadingBar = () => {
-    if (!selectedWordVocab) {
-      return (
-        <div className="border-t border-slate-200/80 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-900/90 px-4 py-2 text-center text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
-          <Sparkles className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-          <span className="bengali-text">
-            পড়ার সময় যেকোনো ইংরেজি শব্দ স্পর্শ করলেই এখানে স্বয়ংক্রিয়ভাবে বাংলা উচ্চারণ ও অর্থ দেখতে পাবেন।
-          </span>
-        </div>
-      );
-    }
-
-    return (
-      <div className={`z-20 w-full transition-all duration-150 border-slate-200 bg-white/95 dark:border-slate-800 dark:bg-slate-900/95 backdrop-blur-md shadow-md ${
-        panelPosition === 'top' 
-          ? 'border-b sticky top-[48px]' 
-          : 'border-t sticky bottom-0'
-      }`}>
-        {/* Compact Main Row (Distraction-free, zero jump reading panel) */}
-        <div className="px-3 py-2 sm:px-5 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4">
-          {/* Word + Pronunciation + Meaning */}
-          <div className="flex items-center gap-2 sm:gap-3 overflow-hidden flex-1 min-w-0">
-            {/* Learned Toggle Checkbox */}
-            {onToggleLearned && (
-              <button
-                onClick={() => onToggleLearned(selectedWordVocab.id, selectedWordVocab.is_learned)}
-                className="shrink-0 text-slate-400 hover:text-emerald-600 transition-colors p-0.5"
-                title={selectedWordVocab.is_learned ? 'Learned' : 'In Progress'}
-              >
-                {selectedWordVocab.is_learned ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                ) : (
-                  <Circle className="h-5 w-5 text-slate-300 dark:text-slate-600" />
-                )}
-              </button>
-            )}
-
-            {/* Word Name & POS */}
-            <div className="shrink-0 flex items-baseline gap-1">
-              <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white capitalize">
-                {selectedWordVocab.word}
-              </span>
-              {selectedWordVocab.part_of_speech && (
-                <span className="text-[10px] font-semibold text-slate-400 italic hidden xs:inline">
-                  ({selectedWordVocab.part_of_speech})
-                </span>
-              )}
-            </div>
-
-            {/* Subtle Divider */}
-            <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 shrink-0 hidden xs:block" />
-
-            {/* Bengali Pronunciation (বাংলা উচ্চারণ) */}
-            <div className="shrink-0 flex items-center gap-1 rounded-lg bg-indigo-50 px-2 py-0.5 dark:bg-indigo-950/70 border border-indigo-100 dark:border-indigo-900/50">
-              <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-semibold hidden md:inline">উচ্চারণ:</span>
-              <span className="bengali-text font-bold text-xs sm:text-sm text-indigo-800 dark:text-indigo-200">
-                {selectedWordVocab.bengali_pronunciation}
-              </span>
-            </div>
-
-            {/* Bengali Meaning (বাংলা অর্থ) */}
-            <div className="min-w-0 flex-1 truncate">
-              <span className="bengali-text font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 truncate block">
-                {selectedWordVocab.bengali_meaning}
-              </span>
-            </div>
-          </div>
-
-          {/* Controls: Audio, Expand, Position, Close */}
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-            {/* Fast Audio Play Button */}
-            <button
-              onClick={() => speakEnglishText(selectedWordVocab.word, { rate: audioSpeed })}
-              className="flex items-center gap-1 h-8 px-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-bold text-xs shadow-2xs transition-transform active:scale-95"
-              title="Pronounce word"
-            >
-              <Volume2 className="h-4 w-4" />
-              <span className="text-[10px] hidden sm:inline">{audioSpeed}x</span>
-            </button>
-
-            {/* Audio Speed Toggle (1.0x / 0.75x) */}
-            <button
-              onClick={() => setAudioSpeed(s => s === 0.85 ? 0.65 : s === 0.65 ? 1.0 : 0.85)}
-              className="h-8 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-bold text-[10px] hidden sm:flex items-center"
-              title="Toggle speed (0.65x, 0.85x, 1.0x)"
-            >
-              {audioSpeed === 0.65 ? '0.65x' : audioSpeed === 1.0 ? '1.0x' : '0.85x'}
-            </button>
-
-            {/* Expand Details (Synonyms/Antonyms) */}
-            <button
-              onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
-              className={`flex items-center gap-0.5 h-8 px-2 rounded-xl text-xs font-semibold transition-colors ${
-                isDetailsExpanded 
-                  ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200' 
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-              }`}
-              title="View Synonyms & Antonyms"
-            >
-              <span className="text-[11px] hidden xs:inline">Details</span>
-              {isDetailsExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-            </button>
-
-            {/* Dock Position Switcher (Top / Bottom) */}
-            <button
-              onClick={() => setPanelPosition(p => p === 'bottom' ? 'top' : 'bottom')}
-              className="h-8 w-8 hidden md:flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              title={panelPosition === 'bottom' ? 'Dock above text' : 'Dock below text'}
-            >
-              {panelPosition === 'bottom' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
-            </button>
-
-            {/* Close / Dismiss Word Panel */}
-            {onClearSelectedWord && (
-              <button
-                onClick={onClearSelectedWord}
-                className="h-8 w-8 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
-                title="Dismiss panel"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Expandable Notebook Details Tray (Distraction-free, inline without covers) */}
-        {isDetailsExpanded && (
-          <div className="border-t border-slate-100 dark:border-slate-800 px-3 py-3 sm:px-6 bg-slate-50/70 dark:bg-slate-850/60 space-y-2.5 max-h-48 overflow-y-auto smooth-scroll-container">
-            {/* English Definition */}
-            {selectedWordVocab.english_definition && (
-              <p className="text-xs text-slate-600 dark:text-slate-300">
-                <span className="font-semibold text-slate-500">Definition: </span>
-                {selectedWordVocab.english_definition}
-              </p>
-            )}
-
-            {/* Synonyms & Antonyms Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              {/* Synonyms */}
-              {synonyms.length > 0 && (
-                <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-2 dark:border-emerald-950/60 dark:bg-emerald-950/30">
-                  <div className="font-bold text-[10px] text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1">
-                    সমার্থক শব্দ (Synonyms)
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {synonyms.map((s, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1 rounded-md bg-white px-1.5 py-0.5 text-xs font-semibold text-emerald-900 shadow-2xs dark:bg-slate-800 dark:text-emerald-200">
-                        <span>{s.word}</span>
-                        <span className="bengali-text text-[10px] font-normal text-emerald-600 dark:text-emerald-400">({s.bengali_pronunciation})</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Antonyms */}
-              {antonyms.length > 0 && (
-                <div className="rounded-xl border border-rose-100 bg-rose-50/60 p-2 dark:border-rose-950/60 dark:bg-rose-950/30">
-                  <div className="font-bold text-[10px] text-rose-700 dark:text-rose-400 uppercase tracking-wider mb-1">
-                    বিপরীতার্থক শব্দ (Antonyms)
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {antonyms.map((a, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1 rounded-md bg-white px-1.5 py-0.5 text-xs font-semibold text-rose-900 shadow-2xs dark:bg-slate-800 dark:text-rose-200">
-                        <span>{a.word}</span>
-                        <span className="bengali-text text-[10px] font-normal text-rose-600 dark:text-rose-400">({a.bengali_pronunciation})</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* AI Assistant guidance button */}
-            {onAskAi && (
-              <button
-                onClick={() => onAskAi(selectedWordVocab.word, selectedWordVocab.context_sentence || '')}
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline pt-0.5"
-              >
-                <BrainCircuit className="h-3.5 w-3.5" />
-                <span>Ask AI Tutor for in-depth explanation in Bengali</span>
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    );
   };
 
   return (
@@ -476,13 +419,16 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
         />
       </div>
 
-      {/* If docked at TOP: Render Notebook Reading Bar here */}
-      {panelPosition === 'top' && renderNotebookReadingBar()}
-
       {/* Main Text Content Area with Smooth Momentum Scrolling */}
       <div 
         ref={contentScrollRef}
         onScroll={handleScroll}
+        onClick={() => {
+          if (activeWord) {
+            setActiveWord(null);
+            onClearSelectedWord?.();
+          }
+        }}
         className="flex-1 overflow-y-auto smooth-scroll-container px-4 py-6 sm:px-10 lg:px-14 max-w-4xl mx-auto w-full pb-16"
       >
         {/* Interactive Helper Banner */}
@@ -490,7 +436,7 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
             <span className="bengali-text font-medium">
-              শব্দে স্পর্শ করুন ➔ সাথে সাথে বাংলা উচ্চারণ, অর্থ, Synonyms ও Antonyms দেখুন।
+              শব্দে স্পর্শ করুন ➔ সাথে সাথে বাংলা উচ্চারণ ও অর্থ সরাসরি শব্দের উপরে দেখতে পাবেন।
             </span>
           </div>
           <span className="self-start sm:self-center shrink-0 text-[11px] font-bold bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-slate-700 shadow-2xs">
@@ -518,14 +464,11 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
         </div>
       </div>
 
-      {/* If docked at BOTTOM: Render Notebook Reading Bar here */}
-      {panelPosition === 'bottom' && renderNotebookReadingBar()}
-
       {/* Floating Scroll To Top Button */}
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="absolute bottom-20 right-5 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 transition-all hover:scale-105 active:scale-95"
+          className="absolute bottom-6 right-5 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 transition-all hover:scale-105 active:scale-95"
           title="Scroll to top"
         >
           <ArrowUp className="h-4 w-4" />
