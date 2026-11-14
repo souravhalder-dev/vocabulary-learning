@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { transliterateWordToBengali } from '@/lib/phonetics';
+import { transliterateWordToBengali, COMMON_BENGALI_MEANINGS } from '@/lib/phonetics';
 
 async function fetchBengaliMeaning(word: string): Promise<{ meaning: string; pos: string }> {
+  if (COMMON_BENGALI_MEANINGS[word]) {
+    return { meaning: COMMON_BENGALI_MEANINGS[word], pos: 'word' };
+  }
   try {
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&dt=bd&q=${encodeURIComponent(word)}`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, next: { revalidate: 86400 } });
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': '*/*',
+      },
+    });
     if (res.ok) {
       const data = await res.json();
       const primary = data?.[0]?.[0]?.[0] || '';
