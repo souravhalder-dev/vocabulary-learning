@@ -266,6 +266,10 @@ export default function Home() {
                     }}
                     savedWordsSet={savedWordsSet}
                     learnedWordsSet={learnedWordsSet}
+                    selectedWordVocab={selectedWordVocab}
+                    onClearSelectedWord={() => setSelectedWordVocab(null)}
+                    onToggleLearned={handleToggleWordLearned}
+                    onAskAi={handleAskAi}
                   />
                 ) : (
                   <div className="flex h-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
@@ -376,25 +380,6 @@ export default function Home() {
           contextSentence={aiAssistantTarget.context}
           onClose={() => setShowAiAssistant(false)}
         />
-      )}
-
-      {/* Mobile Word Detail Bottom Sheet with backdrop & gesture dismiss */}
-      {selectedWordVocab && (
-        <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end bg-slate-900/60 backdrop-blur-xs transition-all animate-in fade-in">
-          <div 
-            className="fixed inset-0" 
-            onClick={() => setSelectedWordVocab(null)} 
-            aria-label="Close backdrop"
-          />
-          <div className="relative z-10 max-h-[82vh] overflow-y-auto rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-slide-up pb-8 smooth-scroll-container">
-            <WordDetailPanel
-              vocabulary={selectedWordVocab}
-              onClose={() => setSelectedWordVocab(null)}
-              onToggleLearned={handleToggleWordLearned}
-              onAskAi={handleAskAi}
-            />
-          </div>
-        </div>
       )}
     </div>
   );

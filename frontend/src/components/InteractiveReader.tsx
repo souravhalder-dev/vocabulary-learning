@@ -10,9 +10,18 @@ import {
   Languages,
   BookOpen,
   ArrowUp,
-  Percent
+  ArrowDown,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+  Circle,
+  X,
+  BrainCircuit,
+  RotateCcw,
+  BookmarkCheck,
+  Layers
 } from 'lucide-react';
-import { DocumentItem, VocabularyItem } from '../types';
+import { DocumentItem, VocabularyItem, WordRelationItem } from '../types';
 import { lookupAndAutoSaveWord, updateReadingProgress } from '../lib/api';
 import { speakEnglishText } from '../lib/speech';
 
@@ -22,6 +31,10 @@ interface InteractiveReaderProps {
   onSentenceSelected?: (sentence: string) => void;
   savedWordsSet?: Set<string>;
   learnedWordsSet?: Set<string>;
+  selectedWordVocab?: VocabularyItem | null;
+  onClearSelectedWord?: () => void;
+  onToggleLearned?: (id: number, current: boolean) => void;
+  onAskAi?: (word: string, context?: string) => void;
 }
 
 export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
@@ -30,6 +43,10 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
   onSentenceSelected,
   savedWordsSet = new Set(),
   learnedWordsSet = new Set(),
+  selectedWordVocab,
+  onClearSelectedWord,
+  onToggleLearned,
+  onAskAi,
 }) => {
   const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg' | 'xl'>('base');
   const [currentPage, setCurrentPage] = useState<number>(document.current_page || 1);
@@ -37,6 +54,11 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
   const [copiedSentence, setCopiedSentence] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState<number>(0);
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
+
+  // Compact Notebook Panel states
+  const [panelPosition, setPanelPosition] = useState<'bottom' | 'top'>('bottom');
+  const [isDetailsExpanded, setIsDetailsExpanded] = useState<boolean>(false);
+  const [audioSpeed, setAudioSpeed] = useState<number>(0.85);
 
   const contentScrollRef = useRef<HTMLDivElement>(null);
 
@@ -90,7 +112,7 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
     setActiveWord(clean);
 
     // Instant audio pronunciation
-    speakEnglishText(clean, { rate: 0.85 });
+    speakEnglishText(clean, { rate: audioSpeed });
 
     try {
       const vocab = await lookupAndAutoSaveWord(
@@ -105,13 +127,13 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
     }
   };
 
-  // Helper to split a paragraph into sentences and tokenized interactive words
+  // Tokenize paragraph into clickable interactive words and sentence translation triggers
   const renderParagraphContent = (paragraphText: string) => {
     const sentenceRegex = /([^.!?]+[.!?]+|\s*[^.!?]+$)/g;
     const sentences = paragraphText.match(sentenceRegex) || [paragraphText];
 
     return sentences.map((sentence, sIdx) => {
-      const tokens = sentence.split(/(\s+|[.,!?;:\"'()\[\]{}—–]+)/g);
+      const tokens = sentence.split(/(\s+|[.,!?;:"'()[\]{}—–]+)/g);
 
       return (
         <span 
@@ -127,7 +149,7 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
             const lower = token.toLowerCase();
             const isSaved = savedWordsSet.has(lower);
             const isLearned = learnedWordsSet.has(lower);
-            const isActive = activeWord === lower;
+            const isActive = (selectedWordVocab && selectedWordVocab.word.toLowerCase() === lower) || activeWord === lower;
 
             return (
               <span
@@ -147,7 +169,7 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
             );
           })}
 
-          {/* Inline Sentence Translation Button */}
+          {/* Inline Sentence Translation Button (Visible on mobile touch screens) */}
           {onSentenceSelected && (
             <button
               onClick={(e) => {
@@ -176,6 +198,206 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
     base: 'text-base sm:text-lg leading-loose sm:leading-loose',
     lg: 'text-lg sm:text-xl leading-loose sm:leading-loose',
     xl: 'text-xl sm:text-2xl leading-loose sm:leading-loose',
+  };
+
+  // Synonyms and antonyms from selected vocab
+  let synonyms: WordRelationItem[] = selectedWordVocab?.synonyms || [];
+  let antonyms: WordRelationItem[] = selectedWordVocab?.antonyms || [];
+  if (synonyms.length === 0 && selectedWordVocab?.synonyms_json) {
+    try { synonyms = JSON.parse(selectedWordVocab.synonyms_json); } catch {}
+  }
+  if (antonyms.length === 0 && selectedWordVocab?.antonyms_json) {
+    try { antonyms = JSON.parse(selectedWordVocab.antonyms_json); } catch {}
+  }
+
+  // Render the Compact Notebook Reading Bar
+  const renderNotebookReadingBar = () => {
+    if (!selectedWordVocab) {
+      return (
+        <div className="border-t border-slate-200/80 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-900/90 px-4 py-2 text-center text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+          <span className="bengali-text">
+            পড়ার সময় যেকোনো ইংরেজি শব্দ স্পর্শ করলেই এখানে স্বয়ংক্রিয়ভাবে বাংলা উচ্চারণ ও অর্থ দেখতে পাবেন।
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`z-20 w-full transition-all duration-150 border-slate-200 bg-white/95 dark:border-slate-800 dark:bg-slate-900/95 backdrop-blur-md shadow-md ${
+        panelPosition === 'top' 
+          ? 'border-b sticky top-[48px]' 
+          : 'border-t sticky bottom-0'
+      }`}>
+        {/* Compact Main Row (Distraction-free, zero jump reading panel) */}
+        <div className="px-3 py-2 sm:px-5 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4">
+          {/* Word + Pronunciation + Meaning */}
+          <div className="flex items-center gap-2 sm:gap-3 overflow-hidden flex-1 min-w-0">
+            {/* Learned Toggle Checkbox */}
+            {onToggleLearned && (
+              <button
+                onClick={() => onToggleLearned(selectedWordVocab.id, selectedWordVocab.is_learned)}
+                className="shrink-0 text-slate-400 hover:text-emerald-600 transition-colors p-0.5"
+                title={selectedWordVocab.is_learned ? 'Learned' : 'In Progress'}
+              >
+                {selectedWordVocab.is_learned ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                ) : (
+                  <Circle className="h-5 w-5 text-slate-300 dark:text-slate-600" />
+                )}
+              </button>
+            )}
+
+            {/* Word Name & POS */}
+            <div className="shrink-0 flex items-baseline gap-1">
+              <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white capitalize">
+                {selectedWordVocab.word}
+              </span>
+              {selectedWordVocab.part_of_speech && (
+                <span className="text-[10px] font-semibold text-slate-400 italic hidden xs:inline">
+                  ({selectedWordVocab.part_of_speech})
+                </span>
+              )}
+            </div>
+
+            {/* Subtle Divider */}
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 shrink-0 hidden xs:block" />
+
+            {/* Bengali Pronunciation (বাংলা উচ্চারণ) */}
+            <div className="shrink-0 flex items-center gap-1 rounded-lg bg-indigo-50 px-2 py-0.5 dark:bg-indigo-950/70 border border-indigo-100 dark:border-indigo-900/50">
+              <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-semibold hidden md:inline">উচ্চারণ:</span>
+              <span className="bengali-text font-bold text-xs sm:text-sm text-indigo-800 dark:text-indigo-200">
+                {selectedWordVocab.bengali_pronunciation}
+              </span>
+            </div>
+
+            {/* Bengali Meaning (বাংলা অর্থ) */}
+            <div className="min-w-0 flex-1 truncate">
+              <span className="bengali-text font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 truncate block">
+                {selectedWordVocab.bengali_meaning}
+              </span>
+            </div>
+          </div>
+
+          {/* Controls: Audio, Expand, Position, Close */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            {/* Fast Audio Play Button */}
+            <button
+              onClick={() => speakEnglishText(selectedWordVocab.word, { rate: audioSpeed })}
+              className="flex items-center gap-1 h-8 px-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-bold text-xs shadow-2xs transition-transform active:scale-95"
+              title="Pronounce word"
+            >
+              <Volume2 className="h-4 w-4" />
+              <span className="text-[10px] hidden sm:inline">{audioSpeed}x</span>
+            </button>
+
+            {/* Audio Speed Toggle (1.0x / 0.75x) */}
+            <button
+              onClick={() => setAudioSpeed(s => s === 0.85 ? 0.65 : s === 0.65 ? 1.0 : 0.85)}
+              className="h-8 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-bold text-[10px] hidden sm:flex items-center"
+              title="Toggle speed (0.65x, 0.85x, 1.0x)"
+            >
+              {audioSpeed === 0.65 ? '0.65x' : audioSpeed === 1.0 ? '1.0x' : '0.85x'}
+            </button>
+
+            {/* Expand Details (Synonyms/Antonyms) */}
+            <button
+              onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
+              className={`flex items-center gap-0.5 h-8 px-2 rounded-xl text-xs font-semibold transition-colors ${
+                isDetailsExpanded 
+                  ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200' 
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+              }`}
+              title="View Synonyms & Antonyms"
+            >
+              <span className="text-[11px] hidden xs:inline">Details</span>
+              {isDetailsExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+            </button>
+
+            {/* Dock Position Switcher (Top / Bottom) */}
+            <button
+              onClick={() => setPanelPosition(p => p === 'bottom' ? 'top' : 'bottom')}
+              className="h-8 w-8 hidden md:flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              title={panelPosition === 'bottom' ? 'Dock above text' : 'Dock below text'}
+            >
+              {panelPosition === 'bottom' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
+            </button>
+
+            {/* Close / Dismiss Word Panel */}
+            {onClearSelectedWord && (
+              <button
+                onClick={onClearSelectedWord}
+                className="h-8 w-8 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                title="Dismiss panel"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Expandable Notebook Details Tray (Distraction-free, inline without covers) */}
+        {isDetailsExpanded && (
+          <div className="border-t border-slate-100 dark:border-slate-800 px-3 py-3 sm:px-6 bg-slate-50/70 dark:bg-slate-850/60 space-y-2.5 max-h-48 overflow-y-auto smooth-scroll-container">
+            {/* English Definition */}
+            {selectedWordVocab.english_definition && (
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                <span className="font-semibold text-slate-500">Definition: </span>
+                {selectedWordVocab.english_definition}
+              </p>
+            )}
+
+            {/* Synonyms & Antonyms Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              {/* Synonyms */}
+              {synonyms.length > 0 && (
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-2 dark:border-emerald-950/60 dark:bg-emerald-950/30">
+                  <div className="font-bold text-[10px] text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1">
+                    সমার্থক শব্দ (Synonyms)
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {synonyms.map((s, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1 rounded-md bg-white px-1.5 py-0.5 text-xs font-semibold text-emerald-900 shadow-2xs dark:bg-slate-800 dark:text-emerald-200">
+                        <span>{s.word}</span>
+                        <span className="bengali-text text-[10px] font-normal text-emerald-600 dark:text-emerald-400">({s.bengali_pronunciation})</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Antonyms */}
+              {antonyms.length > 0 && (
+                <div className="rounded-xl border border-rose-100 bg-rose-50/60 p-2 dark:border-rose-950/60 dark:bg-rose-950/30">
+                  <div className="font-bold text-[10px] text-rose-700 dark:text-rose-400 uppercase tracking-wider mb-1">
+                    বিপরীতার্থক শব্দ (Antonyms)
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {antonyms.map((a, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1 rounded-md bg-white px-1.5 py-0.5 text-xs font-semibold text-rose-900 shadow-2xs dark:bg-slate-800 dark:text-rose-200">
+                        <span>{a.word}</span>
+                        <span className="bengali-text text-[10px] font-normal text-rose-600 dark:text-rose-400">({a.bengali_pronunciation})</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* AI Assistant guidance button */}
+            {onAskAi && (
+              <button
+                onClick={() => onAskAi(selectedWordVocab.word, selectedWordVocab.context_sentence || '')}
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline pt-0.5"
+              >
+                <BrainCircuit className="h-3.5 w-3.5" />
+                <span>Ask AI Tutor for in-depth explanation in Bengali</span>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -254,11 +476,14 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
         />
       </div>
 
+      {/* If docked at TOP: Render Notebook Reading Bar here */}
+      {panelPosition === 'top' && renderNotebookReadingBar()}
+
       {/* Main Text Content Area with Smooth Momentum Scrolling */}
       <div 
         ref={contentScrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto smooth-scroll-container px-4 py-6 sm:px-10 lg:px-14 max-w-4xl mx-auto w-full"
+        className="flex-1 overflow-y-auto smooth-scroll-container px-4 py-6 sm:px-10 lg:px-14 max-w-4xl mx-auto w-full pb-16"
       >
         {/* Interactive Helper Banner */}
         <div className="mb-6 rounded-2xl bg-gradient-to-r from-indigo-50/90 to-violet-50/70 p-3.5 text-xs text-indigo-900 dark:bg-gradient-to-r dark:from-indigo-950/40 dark:to-violet-950/30 dark:text-indigo-200 flex flex-col sm:flex-row sm:items-center sm:justify-between border border-indigo-100/80 dark:border-indigo-900/40 gap-2 shadow-2xs">
@@ -293,29 +518,19 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
         </div>
       </div>
 
+      {/* If docked at BOTTOM: Render Notebook Reading Bar here */}
+      {panelPosition === 'bottom' && renderNotebookReadingBar()}
+
       {/* Floating Scroll To Top Button */}
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="absolute bottom-14 right-5 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 transition-all hover:scale-105 active:scale-95"
+          className="absolute bottom-20 right-5 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 transition-all hover:scale-105 active:scale-95"
           title="Scroll to top"
         >
           <ArrowUp className="h-4 w-4" />
         </button>
       )}
-
-      {/* Reader Footer Info Bar */}
-      <div className="flex items-center justify-between border-t border-slate-200/80 bg-slate-50/60 px-4 sm:px-6 py-2.5 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
-        <div className="flex items-center gap-3">
-          <span>{document.total_words} words</span>
-          <span>•</span>
-          <span>{scrollProgress}% completed</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="hidden sm:inline">Interactive Learning Active</span>
-        </div>
-      </div>
     </div>
   );
 };
