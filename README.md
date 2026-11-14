@@ -4,7 +4,7 @@ A modern, high-performance, AI-powered English reading and vocabulary learning p
 
 ---
 
-## 🌟 Key Features
+##  Key Features
 
 1. **Multi-Source English Content Importer**:
    - **PDF Reader**: PyMuPDF-based text and structure extraction, layout preservation, multi-page navigation, reading progress tracking.
@@ -55,65 +55,4 @@ A modern, high-performance, AI-powered English reading and vocabulary learning p
    - Progressive Web App (PWA) manifest and Service Worker caching.
    - IndexedDB local storage using Dexie.js for offline reading, saved vocabulary, translation history, and reading progress.
 
----
 
-## 🛠️ Technology Stack
-
-- **Frontend**: Next.js 16 (App Router), TypeScript, Tailwind CSS, Lucide Icons, Dexie.js (IndexedDB), Canvas-Confetti, Web Speech API.
-- **Backend**: Python 3.14, FastAPI, SQLAlchemy, Pydantic, PyMuPDF (fitz), BeautifulSoup4, HTTPX, SQLite/PostgreSQL.
-- **AI Engine**: Google Gemini API integration with zero-latency local bilingual phonetic & dictionary fallback engine.
-
----
-
-## 🚀 Getting Started
-
-### 1. Start the Backend:
-```bash
-cd backend
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
-Backend API will be accessible at: `http://127.0.0.1:8000` (API Docs: `http://127.0.0.1:8000/docs`)
-
-### 2. Start the Frontend:
-```bash
-cd frontend
-npm run dev
-```
-Frontend Web App will be accessible at: `http://localhost:3000`
-
-### 3. Run Backend Test Suite:
-```bash
-cd backend
-python -m pytest tests/test_api.py -v
-```
-All automated integration tests will execute and verify health, document parsing, phonetic transliteration, vocabulary lookup, and CSV export.
-
----
-
-## 🚀 Deploying to Vercel
-
-The platform is fully optimized for **1-click Vercel deployment** with native Next.js Serverless Edge functions.
-
-### Method 1: Deploy with Vercel CLI
-```bash
-cd frontend
-vercel
-```
-Follow the interactive prompts:
-- Link to existing project? **N**
-- Project name: **shobdoshadhon-ai**
-- Directory: **.**
-- Want to modify settings? **N**
-
-### Method 2: Deploy from GitHub
-1. Push this repository to GitHub.
-2. In [Vercel Dashboard](https://vercel.com/new), import your GitHub repository.
-3. If deploying from the monorepo root, set:
-   - **Root Directory**: `frontend`
-   - **Framework Preset**: `Next.js`
-   - **Build Command**: `next build`
-   - **Output Directory**: `.next`
-4. (Optional) Set Environment Variables:
-   - `GEMINI_API_KEY`: Your Google Gemini API key (for contextual AI tutor and advanced explanations).
-   - `NEXT_PUBLIC_API_URL`: Leave empty for standalone Next.js serverless functions, or point to an external FastAPI URL if hosting Python separately.
-5. Click **Deploy**. The platform will be live globally on Vercel with instant edge caching, full offline IndexedDB support, article extraction, and Bengali pronunciation!
