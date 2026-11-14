@@ -69,7 +69,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ detail: 'Invalid word' }, { status: 400 });
     }
 
-    const bengaliPronunciation = transliterateWordToBengali(cleanWord);
     const { meaning: bengaliMeaning, pos } = await fetchBengaliMeaning(cleanWord);
 
     let englishDefinition = `Contextual usage and definition of '${cleanWord}'.`;
@@ -88,6 +87,16 @@ export async function POST(req: NextRequest) {
         if (Array.isArray(entries) && entries.length > 0) {
           const first = entries[0];
           ipaPhonetic = first.phonetic || '';
+          if (!ipaPhonetic && Array.isArray(first.phonetics)) {
+            for (const p of first.phonetics) {
+              if (p.text) {
+                ipaPhonetic = p.text;
+                if ((p.audio || '').toLowerCase().includes('uk')) {
+                  break;
+                }
+              }
+            }
+          }
           if (first.meanings) {
             for (const m of first.meanings) {
               if (m.synonyms) rawSynonyms.push(...m.synonyms);
@@ -125,6 +134,8 @@ export async function POST(req: NextRequest) {
         }
       } catch {}
     }
+
+    const bengaliPronunciation = transliterateWordToBengali(cleanWord, ipaPhonetic);
 
     const [synonyms, antonyms] = await Promise.all([
       enrichRelationList(rawSynonyms),

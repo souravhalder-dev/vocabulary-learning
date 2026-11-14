@@ -100,6 +100,12 @@ async def fetch_online_bengali_dictionary(word: str, context_sentence: Optional[
                 if isinstance(entries, list) and len(entries) > 0:
                     data = entries[0]
                     ipa_phonetic = data.get("phonetic")
+                    if not ipa_phonetic and "phonetics" in data and isinstance(data["phonetics"], list):
+                        for p in data["phonetics"]:
+                            if p.get("text"):
+                                ipa_phonetic = p["text"]
+                                if "uk" in p.get("audio", "").lower():
+                                    break
                     if not part_of_speech and data.get("meanings"):
                         part_of_speech = data["meanings"][0].get("partOfSpeech")
                     if data.get("meanings"):
@@ -132,8 +138,7 @@ async def fetch_online_bengali_dictionary(word: str, context_sentence: Optional[
             print(f"Datamuse relation lookup notice: {e}")
 
     # 4. Enrich synonyms and antonyms with Bengali pronunciation and meaning
-    if ipa_phonetic:
-        bengali_pron = transliterate_word_to_bengali(clean, ipa_phonetic)
+    bengali_pron = transliterate_word_to_bengali(clean, ipa_phonetic)
     enriched_synonyms = await enrich_word_relations(raw_synonyms)
     enriched_antonyms = await enrich_word_relations(raw_antonyms)
 

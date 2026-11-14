@@ -260,7 +260,6 @@ export const COMMON_PRONUNCIATION_DICT: Record<string, string> = {
   transforming: "ট্রান্সফর্মিং",
   undergoing: "আন্ডারগোয়িং",
   undergo: "আন্ডারগো",
-  massive: "ম্যাসিভ",
   massively: "ম্যাসিভলি",
   obsolete: "অবসোলেট",
   individual: "ইন্ডিভিজুয়াল",
@@ -366,6 +365,105 @@ export const COMMON_PRONUNCIATION_DICT: Record<string, string> = {
   answer: "অ্যানসার",
   computer: "কম্পিউটার",
   website: "ওয়েবসাইট",
+
+  // Core academic, literature & news vocabulary (Oxford & Cambridge British Standard)
+  talent: "ট্যালেন্ট",
+  talents: "ট্যালেন্টস",
+  talented: "ট্যালেন্টেড",
+  human: "হিউম্যান",
+  humans: "হিউম্যানস",
+  humanity: "হিউম্যানিটি",
+  massive: "ম্যাসিভ",
+  highlight: "হাইলাইট",
+  highlights: "হাইলাইটস",
+  highlighted: "হাইলাইটেড",
+  highlighting: "হাইলাইটিং",
+  worldwide: "ওয়ার্ল্ডওয়াইড",
+  typical: "টিপিক্যাল",
+  typically: "টিপিক্যালি",
+  unprecedented: "আনপ্রেসিডেন্টেড",
+  precedent: "প্রেসিডেন্ট",
+  precedented: "প্রেসিডেন্টেড",
+  phonology: "ফোনোলজি",
+  phonological: "ফোনোলজিক্যাল",
+  empower: "এমপাওয়ার",
+  empowers: "এমপাওয়ার্স",
+  empowered: "এমপাওয়ার্ড",
+  empowering: "এমপাওয়ারিং",
+  recognize: "রেকগনাইজ",
+  recognise: "রেকগনাইজ",
+  recognizes: "রেকগনাইজেস",
+  recognises: "রেকগনাইজেস",
+  recognized: "রেকগনাইজড",
+  recognised: "রেকগনাইজড",
+  recognizing: "রেকগনাইজিং",
+  recognising: "রেকগনাইজিং",
+  recognition: "রেকগনিশন",
+  inclusive: "ইনক্লুসিভ",
+  include: "ইনক্লুড",
+  includes: "ইনক্লুডস",
+  included: "ইনক্লুডেড",
+  including: "ইনক্লুডিং",
+  generate: "জেনারেট",
+  generates: "জেনারেটস",
+  generated: "জেনারেটেড",
+  generating: "জেনারেটিং",
+  generation: "জেনারেশন",
+  howkins: "হকিন্স",
+  encompass: "এনকম্পাস",
+  encompasses: "এনকম্পাসেস",
+  encompassed: "এনকম্পাসড",
+  encompassing: "এনকম্পাসিং",
+  orange: "অরেঞ্জ",
+  oranges: "অরেঞ্জেস",
+  concept: "কনসেপ্ট",
+  concepts: "কনসেপ্টস",
+  value: "ভ্যালু",
+  values: "ভ্যালুজ",
+  valuable: "ভ্যালুয়েবল",
+  agriculture: "এগ্রিকালচার",
+  agricultural: "এগ্রিকালচারাল",
+  labour: "লেবার",
+  labor: "লেবার",
+  rapid: "র‍্যাপিড",
+  rapidly: "র‍্যাপিডলি",
+  power: "পাওয়ার",
+  powers: "পাওয়ার্স",
+  powered: "পাওয়ার্ড",
+  powering: "পাওয়ারিং",
+  scale: "স্কেল",
+  scales: "স্কেলস",
+  global: "গ্লোবাল",
+  globally: "গ্লোবালি",
+  sector: "সেক্টর",
+  sectors: "সেক্টরস",
+  driven: "ড্রিভেন",
+  drive: "ড্রাইভ",
+  heavy: "হেভি",
+  heavily: "হেভিলি",
+  cheap: "চিপ",
+  cheaper: "চিপার",
+  become: "বিকাম",
+  becoming: "বিকামিং",
+  rely: "রিলাই",
+  relies: "রিলাইজ",
+  relied: "রিলাইড",
+  introduce: "ইন্ট্রোডিউস",
+  introduced: "ইন্ট্রোডিউসড",
+  introducing: "ইন্ট্রোডিউসিং",
+  core: "কোর",
+  cores: "কোর্স",
+  british: "ব্রিটিশ",
+  parliament: "পার্লামেন্ট",
+  environment: "এনভায়রনমেন্ট",
+  government: "গভর্নমেন্ট",
+  sustainable: "সাস্টেইনেবল",
+  architecture: "আর্কিটেকচার",
+  infrastructure: "ইনফ্রাস্ট্রাকচার",
+  psychology: "সাইকোলজি",
+  inevitable: "ইনেভিটেবল",
+  circumstance: "সারকামস্ট্যান্স",
+  circumstances: "সারকামস্ট্যান্সেস"
 };
 
 export const COMMON_BENGALI_MEANINGS: Record<string, string> = {
@@ -475,46 +573,151 @@ const PHONEME_MAP: Record<string, string> = {
   z: "জ"
 };
 
+const IPA_CONSONANTS: [string, string][] = [
+  ["stɹ", "স্ট্র"], ["stj", "স্টু"], ["skw", "স্কু"], ["sk", "স্ক"], ["sp", "স্প"], ["st", "স্ট"],
+  ["tɹ", "ট্র"], ["dɹ", "ড্র"], ["bɹ", "ব্র"], ["kɹ", "ক্র"], ["ɡɹ", "গ্র"], ["pɹ", "প্র"], ["fɹ", "ফ্র"],
+  ["nt", "ন্ট"], ["nd", "ন্ড"], ["mp", "ম্প"], ["mb", "ম্ব"], ["ŋk", "ঙ্ক"], ["kt", "ক্ট"], ["ks", "ক্স"],
+  ["ld", "ল্ড"], ["lt", "ল্ট"], ["rd", "র্ড"], ["rt", "র্ট"], ["rk", "র্ক"], ["rn", "র্ন"], ["rm", "র্ম"],
+  ["kl", "ক্ল"], ["pl", "প্ল"], ["bl", "ব্ল"], ["fl", "ফ্ল"], ["gl", "গ্ল"],
+  ["tʃ", "চ"], ["dʒ", "জ"], ["t͡ʃ", "চ"], ["d͡ʒ", "জ"],
+  ["ʃ", "শ"], ["ʒ", "ঝ"], ["θ", "থ"], ["ð", "দ"], ["ŋ", "ং"],
+  ["b", "ব"], ["p", "প"], ["d", "ড"], ["t", "ট"], ["k", "ক"], ["ɡ", "গ"], ["g", "গ"],
+  ["m", "ম"], ["n", "ন"], ["l", "ল"], ["ɹ", "র"], ["r", "র"], ["s", "স"], ["z", "জ"],
+  ["f", "ফ"], ["v", "ভ"], ["w", "ওয়"], ["j", "ই"], ["h", "হ"]
+];
+
+const IPA_VOWELS: [string, string, string][] = [
+  ["eɪ", "এই", "েই"], ["aɪ", "আই", "াই"], ["ɔɪ", "অয়", "য়"], ["aʊ", "আউ", "াউ"],
+  ["əʊ", "ও", "ো"], ["oʊ", "ও", "ো"], ["juː", "ইউ", "িউ"], ["ju", "ইউ", "িউ"],
+  ["iː", "ঈ", "ী"], ["uː", "উ", "ু"], ["ɔː", "অ", "ো"], ["ɑː", "আ", "া"],
+  ["ɜːld", "ওয়ার্ল্ড", "ওয়ার্ল্ড"], ["ɜːr", "আর", "ার"], ["ɜː", "আ", "া"], ["ɜr", "আর", "ার"],
+  ["ər", "আর", "ার"], ["ɚ", "আর", "ার"],
+  ["tʃə", "চার", "চার"], ["tʃər", "চার", "চার"],
+  ["ʃn", "শন", "শন"], ["ʃən", "শন", "শন"],
+  ["ənt", "এন্ট", "েন্ট"], ["ənts", "এন্টস", "েন্টস"], ["ənd", "এন্ড", "েন্ড"], ["ənds", "এন্ডস", "েন্ডস"],
+  ["əns", "এন্স", "েন্স"], ["ənsɪz", "এন্সেস", "েন্সেস"],
+  ["əbl", "এবল", "এবল"], ["ɪbl", "ইবল", "ইবল"],
+  ["æ", "অ্যা", "্যা"], ["a", "অ্যা", "্যা"], ["ɛ", "এ", "ে"], ["e", "এ", "ে"],
+  ["ɪ", "ই", "ি"], ["ɒ", "অ", "ো"], ["ɔ", "অ", "ো"], ["ɑ", "আ", "া"],
+  ["ʌ", "আ", "া"], ["ʊ", "উ", "ু"], ["i", "ই", "ি"], ["u", "উ", "ু"],
+  ["ə", "আ", "া"]
+];
+
+export function ipaToBengaliPronunciation(ipaStr?: string): string | null {
+  if (!ipaStr) return null;
+  try {
+    const s = ipaStr.replace(/[\/\[\]ˌˈ:͡.]/g, "").replace("(j)", "j").replace("(ə)", "").replace("(ɹ)", "r").replace("(r)", "r").trim();
+    const result: string[] = [];
+    let i = 0;
+    const n = s.length;
+    let lastWasConsonant = false;
+
+    while (i < n) {
+      let matchedVowel = false;
+      for (const [ph, full, matra] of IPA_VOWELS) {
+        if (s.startsWith(ph, i)) {
+          if (ph === "ə" && i + 1 === n) {
+            result.push(lastWasConsonant ? matra : "া");
+          } else if (ph === "ə") {
+            if (!lastWasConsonant) result.push("অ");
+          } else {
+            result.push(lastWasConsonant ? matra : full);
+          }
+          i += ph.length;
+          lastWasConsonant = false;
+          matchedVowel = true;
+          break;
+        }
+      }
+      if (matchedVowel) continue;
+
+      let matchedCons = false;
+      for (const [ph, bCons] of IPA_CONSONANTS) {
+        if (s.startsWith(ph, i)) {
+          result.push(bCons);
+          i += ph.length;
+          lastWasConsonant = true;
+          matchedCons = true;
+          break;
+        }
+      }
+      if (matchedCons) continue;
+
+      i++;
+    }
+
+    let res = result.join("").trim();
+    res = res.replace(/([ািীুূেৈোৌ্])\1+/g, "$1");
+    if (res.endsWith("শান")) {
+      res = res.slice(0, -3) + "শন";
+    }
+    return res.length >= 2 ? res : null;
+  } catch {
+    return null;
+  }
+}
+
 export function transliterateWordToBengali(word: string, ipa?: string): string {
   const cleanWord = word.replace(/[^a-zA-Z]/g, "").trim().toLowerCase();
   if (!cleanWord) return "";
 
-  // 1. Exact match
+  // 1. Exact match in standard dictionary
   if (COMMON_PRONUNCIATION_DICT[cleanWord]) {
     return COMMON_PRONUNCIATION_DICT[cleanWord];
   }
 
   // 2. Inflection checks
-  if (cleanWord.endsWith("s") && COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -1)]) {
-    return COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -1)] + "স";
+  if (cleanWord.endsWith("ed")) {
+    const stem = cleanWord.slice(0, -2);
+    if (COMMON_PRONUNCIATION_DICT[stem]) {
+      return COMMON_PRONUNCIATION_DICT[stem] + (stem.endsWith("t") || stem.endsWith("d") ? "েড" : "ড");
+    }
+    if (COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -1)]) {
+      return COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -1)] + "ড";
+    }
+  }
+  if (cleanWord.endsWith("ing")) {
+    const stem = cleanWord.slice(0, -3);
+    if (COMMON_PRONUNCIATION_DICT[stem]) {
+      return COMMON_PRONUNCIATION_DICT[stem] + "ইং";
+    }
+    if (COMMON_PRONUNCIATION_DICT[stem + "e"]) {
+      return COMMON_PRONUNCIATION_DICT[stem + "e"] + "ইং";
+    }
   }
   if (cleanWord.endsWith("es") && COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -2)]) {
     return COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -2)] + "েস";
   }
-  if (cleanWord.endsWith("ed") && COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -2)]) {
-    return COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -2)] + "ড";
-  }
-  if (cleanWord.endsWith("ing") && COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -3)]) {
-    return COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -3)] + "ইং";
+  if (cleanWord.endsWith("s") && COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -1)]) {
+    return COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -1)] + "স";
   }
   if (cleanWord.endsWith("ly") && COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -2)]) {
     return COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -2)] + "লি";
   }
+  if (cleanWord.endsWith("wide") && COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -4)]) {
+    return COMMON_PRONUNCIATION_DICT[cleanWord.slice(0, -4)] + "ওয়াইড";
+  }
+  if (cleanWord.endsWith("logical")) {
+    const stemLogy = cleanWord.slice(0, -7) + "logy";
+    if (COMMON_PRONUNCIATION_DICT[stemLogy]) {
+      return COMMON_PRONUNCIATION_DICT[stemLogy].slice(0, -4) + "লজিক্যাল";
+    }
+  }
 
-  // 3. Suffix decomposition
+  // 3. IPA conversion if IPA is provided
+  if (ipa) {
+    const fromIpa = ipaToBengaliPronunciation(ipa);
+    if (fromIpa) return fromIpa;
+  }
+
+  // 4. Suffix decomposition
   let w = cleanWord;
   let suffixBengali = "";
 
-  if (w.endsWith("tion")) {
+  if (w.endsWith("tion") || w.endsWith("sion")) {
     w = w.slice(0, -4);
     suffixBengali = "শন";
-  } else if (w.endsWith("sion")) {
-    w = w.slice(0, -4);
-    suffixBengali = "শন";
-  } else if (w.endsWith("tions")) {
-    w = w.slice(0, -5);
-    suffixBengali = "শনস";
-  } else if (w.endsWith("sions")) {
+  } else if (w.endsWith("tions") || w.endsWith("sions")) {
     w = w.slice(0, -5);
     suffixBengali = "শনস";
   } else if (w.endsWith("ture")) {
@@ -547,12 +750,48 @@ export function transliterateWordToBengali(word: string, ipa?: string): string {
     return COMMON_PRONUNCIATION_DICT[w] + suffixBengali;
   }
 
-  // 4. Character & Cluster synthesis
+  // 5. Grapheme-to-Phoneme character & cluster synthesis
   const result: string[] = [];
   let i = 0;
   const len = w.length;
 
   while (i < len) {
+    if (w.startsWith("ight", i)) {
+      result.push(i > 0 ? "াইট" : "আইট");
+      i += 4;
+      continue;
+    }
+    if (w.startsWith("igh", i)) {
+      result.push(i > 0 ? "াই" : "আই");
+      i += 3;
+      continue;
+    }
+    if (w.startsWith("wor", i)) {
+      result.push("ওয়ার");
+      i += 3;
+      continue;
+    }
+    if (w.startsWith("war", i)) {
+      result.push("ওয়ার");
+      i += 3;
+      continue;
+    }
+    if (w.startsWith("all", i)) {
+      result.push("অল");
+      i += 3;
+      continue;
+    }
+    if (w[i] === "c" && i + 1 < len && "eiy".includes(w[i + 1])) {
+      result.push("স");
+      i++;
+      continue;
+    }
+    if (w[i] === "g" && i + 1 < len && "eiy".includes(w[i + 1]) && (i > 0 || len > 4)) {
+      result.push("জ");
+      i++;
+      continue;
+    }
+
     if (i + 4 <= len && PHONEME_MAP[w.slice(i, i + 4)]) {
       result.push(PHONEME_MAP[w.slice(i, i + 4)]);
       i += 4;

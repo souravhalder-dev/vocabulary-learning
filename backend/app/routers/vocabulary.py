@@ -103,7 +103,7 @@ async def lookup_and_auto_save_word(payload: VocabularyLookupRequest, db: Sessio
             return format_vocab_response(existing)
 
         # Always ensure authentic Bengali pronunciation is kept up to date
-        correct_pron = transliterate_word_to_bengali(clean_word)
+        correct_pron = transliterate_word_to_bengali(clean_word, existing.ipa_phonetic)
         if existing.bengali_pronunciation != correct_pron and correct_pron:
             existing.bengali_pronunciation = correct_pron
 

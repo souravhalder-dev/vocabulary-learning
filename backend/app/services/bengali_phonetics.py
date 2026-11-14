@@ -780,7 +780,241 @@ COMMON_PRONUNCIATION_DICT: Dict[str, str] = {
     "pull": "পুল",
     "pulls": "পুলস",
     "pulled": "পুলড",
-    "pulling": "পুলিtopং"
+    "pulling": "পলিং",
+
+    # Core academic, literature & news vocabulary (Oxford & Cambridge British Standard)
+    "talent": "ট্যালেন্ট",
+    "talents": "ট্যালেন্টস",
+    "talented": "ট্যালেন্টেড",
+    "human": "হিউম্যান",
+    "humans": "হিউম্যানস",
+    "humanity": "হিউম্যানিটি",
+    "massive": "ম্যাসিভ",
+    "highlight": "হাইলাইট",
+    "highlights": "হাইলাইটস",
+    "highlighted": "হাইলাইটেড",
+    "highlighting": "হাইলাইটিং",
+    "worldwide": "ওয়ার্ল্ডওয়াইড",
+    "typical": "টিপিক্যাল",
+    "typically": "টিপিক্যালি",
+    "unprecedented": "আনপ্রেসিডেন্টেড",
+    "precedent": "প্রেসিডেন্ট",
+    "precedented": "প্রেসিডেন্টেড",
+    "phonology": "ফোনোলজি",
+    "phonological": "ফোনোলজিক্যাল",
+    "empower": "এমপাওয়ার",
+    "empowers": "এমপাওয়ার্স",
+    "empowered": "এমপাওয়ার্ড",
+    "empowering": "এমপাওয়ারিং",
+    "recognize": "রেকগনাইজ",
+    "recognise": "রেকগনাইজ",
+    "recognizes": "রেকগনাইজেস",
+    "recognises": "রেকগনাইজেস",
+    "recognized": "রেকগনাইজড",
+    "recognised": "রেকগনাইজড",
+    "recognizing": "রেকগনাইজিং",
+    "recognising": "রেকগনাইজিং",
+    "recognition": "রেকগনিশন",
+    "inclusive": "ইনক্লুসিভ",
+    "include": "ইনক্লুড",
+    "includes": "ইনক্লুডস",
+    "included": "ইনক্লুডেড",
+    "including": "ইনক্লুডিং",
+    "generate": "জেনারেট",
+    "generates": "জেনারেটস",
+    "generated": "জেনারেটেড",
+    "generating": "জেনারেটিং",
+    "generation": "জেনারেশন",
+    "howkins": "হকিন্স",
+    "encompass": "এনকম্পাস",
+    "encompasses": "এনকম্পাসেস",
+    "encompassed": "এনকম্পাসড",
+    "encompassing": "এনকম্পাসিং",
+    "understanding": "আন্ডারস্ট্যান্ডিং",
+    "understand": "আন্ডারস্ট্যান্ড",
+    "understands": "আন্ডারস্ট্যান্ডস",
+    "understood": "আন্ডারস্টুড",
+    "undergoing": "আন্ডারগোয়িং",
+    "undergo": "আন্ডারগো",
+    "undergoes": "আন্ডারগোজ",
+    "underwent": "আন্ডারওয়েন্ট",
+    "undergone": "আন্ডারগন",
+    "economy": "ইকোনমি",
+    "economic": "ইকোনমিক",
+    "economies": "ইকোনমিজ",
+    "economical": "ইকোনমিক্যাল",
+    "economist": "ইকোনমিস্ট",
+    "philosophy": "ফিলোসফি",
+    "philosophical": "ফিলোসফিক্যাল",
+    "revolution": "রেভোলিউশন",
+    "revolutionary": "রেভোলিউশনারি",
+    "individuality": "ইন্ডিভিজুয়ালিটি",
+    "individual": "ইন্ডিভিজুয়াল",
+    "creativity": "ক্রিয়েটিভিটি",
+    "creative": "ক্রিয়েটিভ",
+    "create": "ক্রিয়েট",
+    "creates": "ক্রিয়েটস",
+    "created": "ক্রিয়েটেড",
+    "creating": "ক্রিয়েটিং",
+    "creation": "ক্রিয়েশন",
+    "artificial": "আর্টিফিশিয়াল",
+    "artificially": "আর্টিফিশিয়ালি",
+    "intelligence": "ইন্টেলিজেন্স",
+    "intelligent": "ইন্টেলিজেন্ট",
+    "curious": "কিউরিয়াস",
+    "curiosity": "কিউরিওসিটি",
+    "curiously": "কিউরিয়াসলি",
+    "language": "ল্যাঙ্গুয়েজ",
+    "languages": "ল্যাঙ্গুয়েজেস",
+    "british": "ব্রিটিশ",
+    "britain": "ব্রিটেন",
+    "growing": "গ্রোয়িং",
+    "grow": "গ্রো",
+    "grows": "গ্রোজ",
+    "grew": "গ্রিউ",
+    "grown": "গ্রোন",
+    "growth": "গ্রোথ",
+    "student": "স্টুডেন্ট",
+    "students": "স্টুডেন্টস",
+    "resilience": "রেজিলিয়েন্স",
+    "resilient": "রেজিলিয়েন্ট",
+    "significant": "সিগনিফিক্যান্ট",
+    "significantly": "সিগনিফিক্যান্টলি",
+    "significance": "সিগনিফিক্যান্স",
+    "vocabulary": "ভোকাবুলারি",
+    "vocabularies": "ভোকাবুলারিজ",
+    "set": "সেট",
+    "sets": "সেটস",
+    "setting": "সেটিং",
+    "knowledge": "নলেজ",
+    "knowledgeable": "নলেজেবল",
+    "development": "ডেভেলপমেন্ট",
+    "develop": "ডেভেলপ",
+    "develops": "ডেভেলপস",
+    "developed": "ডেভেলপড",
+    "developing": "ডেভেলপিং",
+    "learner": "লার্নার",
+    "learners": "লার্নার্স",
+    "learn": "লার্ন",
+    "learns": "লার্নস",
+    "learned": "লার্নড",
+    "learning": "লার্নিং",
+    "core": "কোর",
+    "cores": "কোর্স",
+    "its": "ইটস",
+    "it": "ইট",
+    "and": "অ্যান্ড",
+    "culture": "কালচার",
+    "cultural": "কালচারাল",
+    "culturally": "কালচারালি",
+    "orange": "অরেঞ্জ",
+    "oranges": "অরেঞ্জেস",
+    "concept": "কনসেপ্ট",
+    "concepts": "কনসেপ্টস",
+    "value": "ভ্যালু",
+    "values": "ভ্যালুজ",
+    "valuable": "ভ্যালুয়েবল",
+    "obsolete": "অবসোলিট",
+    "agriculture": "এগ্রিকালচার",
+    "agricultural": "এগ্রিকালচারাল",
+    "industry": "ইন্ডাস্ট্রি",
+    "industries": "ইন্ডাস্ট্রিজ",
+    "industrial": "ইন্ডাস্ট্রিয়াল",
+    "labour": "লেবার",
+    "labor": "লেবার",
+    "rapid": "র‍্যাপিড",
+    "rapidly": "র‍্যাপিডলি",
+    "power": "পাওয়ার",
+    "powers": "পাওয়ার্স",
+    "powered": "পাওয়ার্ড",
+    "powering": "পাওয়ারিং",
+    "scale": "স্কেল",
+    "scales": "স্কেলস",
+    "scaled": "স্কেলড",
+    "scaling": "স্কেলিং",
+    "global": "গ্লোবাল",
+    "globally": "গ্লোবালি",
+    "transformation": "ট্রান্সফরমেশন",
+    "transform": "ট্রান্সফর্ম",
+    "transforms": "ট্রান্সফর্মস",
+    "transformed": "ট্রান্সফর্মড",
+    "transforming": "ট্রান্সফর্মিং",
+    "traditional": "ট্রেডিশনাল",
+    "traditionally": "ট্রেডিশনালি",
+    "tradition": "ট্রেডিশন",
+    "traditions": "ট্রেডিশনস",
+    "sector": "সেক্টর",
+    "sectors": "সেক্টরস",
+    "driven": "ড্রিভেন",
+    "drive": "ড্রাইভ",
+    "drives": "ড্রাইভস",
+    "driving": "ড্রাইভিং",
+    "drove": "ড্রোভ",
+    "heavy": "হেভি",
+    "heavily": "হেভিলি",
+    "cheap": "চিপ",
+    "cheaper": "চিপার",
+    "cheapest": "চিপেস্ট",
+    "become": "বিকাম",
+    "becomes": "বিকামস",
+    "became": "বিকেইম",
+    "becoming": "বিকামিং",
+    "rely": "রিলাই",
+    "relies": "রিলাইজ",
+    "relied": "রিলাইড",
+    "relying": "রিলায়িং",
+    "introduce": "ইন্ট্রোডিউস",
+    "introduces": "ইন্ট্রোডিউসেস",
+    "introduced": "ইন্ট্রোডিউসড",
+    "introducing": "ইন্ট্রোডিউসিং",
+    "introduction": "ইন্ট্রোডাকশন",
+    "horizon": "হরাইজন",
+    "horizons": "হরাইজনস",
+    "imagination": "ইমাজিনেশন",
+    "imagine": "ইমাজিন",
+    "imagines": "ইমাজিনস",
+    "imagined": "ইমাজিন্ড",
+    "imagining": "ইমাজিনিং",
+    "imaginative": "ইমাজিনেটিভ",
+    "opportunity": "অপরচুনিটি",
+    "opportunities": "অপরচুনিটিজ",
+    "challenge": "চ্যালেঞ্জ",
+    "challenges": "চ্যালেঞ্জেস",
+    "challenged": "চ্যালেঞ্জড",
+    "challenging": "চ্যালেঞ্জিং",
+    "education": "এডুকেশন",
+    "educational": "এডুকেশনাল",
+    "technology": "টেকনোলজি",
+    "technologies": "টেকনোলজিস্ট",
+    "technological": "টেকনোলজিক্যাল",
+    "confidence": "কনফিডেন্স",
+    "confident": "কনফিডেন্ট",
+    "fluency": "ফ্লুয়েন্সি",
+    "fluent": "ফ্লুয়েন্ট",
+    "fluently": "ফ্লুয়েন্টলি",
+    "comprehension": "কম্প্রিহেনশন",
+    "comprehend": "কম্প্রিহেন্ড",
+    "perseverance": "পারসিভিয়ারেন্স",
+    "persevere": "পারসিভিয়ার",
+    "meticulous": "মেটিকুলাস",
+    "meticulously": "মেটিকুলাসলি",
+    "pragmatic": "প্র্যাগম্যাটিক",
+    "pragmatically": "প্র্যাগম্যাটিক্যালি",
+    "authentic": "অথেনটিক",
+    "authentically": "অথেনটিক্যালি",
+    "authenticity": "অথেনটিসিটি",
+    "ubiquitous": "ইউবিকুইটাস",
+    "parliament": "পার্লামেন্ট",
+    "environment": "এনভায়রনমেন্ট",
+    "government": "গভর্নমেন্ট",
+    "sustainable": "সাস্টেইনেবল",
+    "architecture": "আর্কিটেকচার",
+    "infrastructure": "ইনফ্রাস্ট্রাকচার",
+    "psychology": "সাইকোলজি",
+    "inevitable": "ইনেভিটেবল",
+    "communication": "কমিউনিকেশন",
+    "circumstance": "সারকামস্ট্যান্স",
+    "circumstances": "সারকামস্ট্যান্সেস"
 }
 
 # Consonant clusters and phonemes mapping
@@ -800,39 +1034,55 @@ PHONEME_MAP = {
     "b": "ব", "c": "ক", "d": "ড", "f": "ফ", "g": "গ",
     "h": "হ", "j": "জ", "k": "ক", "l": "ল", "m": "ম",
     "n": "ন", "p": "প", "q": "ক", "r": "র", "s": "স",
-    "t": "ট", "v": "ভ", "w": "ওয়", "x": "ক্স", "y": "ই",
+    "t": "ট", "v": "ভ", "w": "ওয়", "x": "ক্স", "y": "ই",
     "z": "জ"
 }
 
 IPA_CONSONANTS = [
     ("stɹ", "স্ট্র"), ("stj", "স্টু"), ("skw", "স্কু"), ("sk", "স্ক"), ("sp", "স্প"), ("st", "স্ট"),
     ("tɹ", "ট্র"), ("dɹ", "ড্র"), ("bɹ", "ব্র"), ("kɹ", "ক্র"), ("ɡɹ", "গ্র"), ("pɹ", "প্র"), ("fɹ", "ফ্র"),
-    ("tʃ", "চ"), ("dʒ", "জ"), ("ʃ", "শ"), ("ʒ", "ঝ"), ("θ", "থ"), ("ð", "দ"), ("ŋ", "ং"),
+    ("nt", "ন্ট"), ("nd", "ন্ড"), ("mp", "ম্প"), ("mb", "ম্ব"), ("ŋk", "ঙ্ক"), ("kt", "ক্ট"), ("ks", "ক্স"),
+    ("ld", "ল্ড"), ("lt", "ল্ট"), ("rd", "র্ড"), ("rt", "র্ট"), ("rk", "র্ক"), ("rn", "র্ন"), ("rm", "র্ম"),
+    ("kl", "ক্ল"), ("pl", "প্ল"), ("bl", "ব্ল"), ("fl", "ফ্ল"), ("gl", "গ্ল"),
+    ("tʃ", "চ"), ("dʒ", "জ"), ("t͡ʃ", "চ"), ("d͡ʒ", "জ"),
+    ("ʃ", "শ"), ("ʒ", "ঝ"), ("θ", "থ"), ("ð", "দ"), ("ŋ", "ং"),
     ("b", "ব"), ("p", "প"), ("d", "ড"), ("t", "ট"), ("k", "ক"), ("ɡ", "গ"), ("g", "গ"),
     ("m", "ম"), ("n", "ন"), ("l", "ল"), ("ɹ", "র"), ("r", "র"), ("s", "স"), ("z", "জ"),
-    ("f", "ফ"), ("v", "ভ"), ("w", "ওয়"), ("j", "ই"), ("h", "হ")
+    ("f", "ফ"), ("v", "ভ"), ("w", "ওয়"), ("j", "ই"), ("h", "হ")
 ]
 
 IPA_VOWELS = [
-    ("eɪ", "এই", "েই"), ("aɪ", "আই", "াই"), ("ɔɪ", "অই", "ই"), ("aʊ", "আউ", "াউ"),
+    ("eɪ", "এই", "েই"), ("aɪ", "আই", "াই"), ("ɔɪ", "অয়", "য়"), ("aʊ", "আউ", "াউ"),
     ("əʊ", "ও", "ো"), ("oʊ", "ও", "ো"), ("juː", "ইউ", "িউ"), ("ju", "ইউ", "িউ"),
     ("iː", "ঈ", "ী"), ("uː", "উ", "ু"), ("ɔː", "অ", "ো"), ("ɑː", "আ", "া"),
-    ("ɜː", "আ", "া"), ("ɜr", "আর", "ার"), ("ər", "আর", "ার"), ("ɚ", "আর", "ার"),
-    ("æ", "অ্যা", "্যা"), ("ɛ", "এ", "ে"), ("ɪ", "ই", "ি"), ("ɒ", "অ", "ো"),
-    ("ʌ", "আ", "া"), ("ʊ", "উ", "ু"), ("ə", "আ", "া"), ("i", "ই", "ি"), ("u", "উ", "ু")
+    ("ɜːld", "ওয়ার্ল্ড", "ওয়ার্ল্ড"), ("ɜːr", "আর", "ার"), ("ɜː", "আ", "া"), ("ɜr", "আর", "ার"),
+    ("ər", "আর", "ার"), ("ɚ", "আর", "ার"),
+    ("tʃə", "চার", "চার"), ("tʃər", "চার", "চার"),
+    ("ʃn", "শন", "শন"), ("ʃən", "শন", "শন"),
+    ("ənt", "এন্ট", "েন্ট"), ("ənts", "এন্টস", "েন্টস"), ("ənd", "এন্ড", "েন্ড"), ("ənds", "এন্ডস", "েন্ডস"),
+    ("əns", "এন্স", "েন্স"), ("ənsɪz", "এন্সেস", "েন্সেস"),
+    ("əbl", "এবল", "এবল"), ("ɪbl", "ইবল", "ইবল"),
+    ("æ", "অ্যা", "্যা"), ("a", "অ্যা", "্যা"), ("ɛ", "এ", "ে"), ("e", "এ", "ে"),
+    ("ɪ", "ই", "ি"), ("ɒ", "অ", "ো"), ("ɔ", "অ", "ো"), ("ɑ", "আ", "া"),
+    ("ʌ", "আ", "া"), ("ʊ", "উ", "ু"), ("i", "ই", "ি"), ("u", "উ", "ু"),
+    ("ə", "আ", "া")
 ]
 
 
 def ipa_to_bengali_pronunciation(ipa_str: str) -> Optional[str]:
     """
-    Converts International Phonetic Alphabet (IPA) representation into natural Bengali phonetic script.
+    Converts International Phonetic Alphabet (IPA) representation into natural, standard Bengali phonetic script.
+    Follows Oxford and Cambridge British English pronunciation rules.
+    Example: '/ˈtalənt/' or '/ˈtælənt/' -> 'ট্যালেন্ট'
+    Example: '/ˈwɜːldwaɪd/' -> 'ওয়ার্ল্ডওয়াইড'
     Example: '/ˌɹɛvəˈluːʃən/' -> 'রেভোলিউশন'
     """
     if not ipa_str:
         return None
     try:
-        s = re.sub(r"[\/\[\]ˌˈː:]", "", ipa_str).strip()
-        s = s.replace("(j)", "j").replace("(ə)", "")
+        # Keep ː length marker so long vowel combinations match accurately!
+        s = re.sub(r"[\/\[\]ˌˈ:͡.]", "", ipa_str).strip()
+        s = s.replace("(j)", "j").replace("(ə)", "").replace("(ɹ)", "r").replace("(r)", "r")
         result = []
         i = 0
         n = len(s)
@@ -842,10 +1092,13 @@ def ipa_to_bengali_pronunciation(ipa_str: str) -> Optional[str]:
             matched_vowel = False
             for ph, full, matra in IPA_VOWELS:
                 if s.startswith(ph, i):
-                    if last_was_consonant:
-                        result.append(matra)
+                    if ph == "ə" and i + 1 == n:
+                        result.append(matra if last_was_consonant else "া")
+                    elif ph == "ə":
+                        if not last_was_consonant:
+                            result.append("অ")
                     else:
-                        result.append(full)
+                        result.append(matra if last_was_consonant else full)
                     i += len(ph)
                     last_was_consonant = False
                     matched_vowel = True
@@ -892,16 +1145,30 @@ def transliterate_word_to_bengali(word: str, ipa: Optional[str] = None) -> str:
         return COMMON_PRONUNCIATION_DICT[clean_word]
 
     # 2. Check common morphological inflections
-    if clean_word.endswith("s") and clean_word[:-1] in COMMON_PRONUNCIATION_DICT:
-        return COMMON_PRONUNCIATION_DICT[clean_word[:-1]] + "স"
+    if clean_word.endswith("ed"):
+        stem = clean_word[:-2]
+        if stem in COMMON_PRONUNCIATION_DICT:
+            return COMMON_PRONUNCIATION_DICT[stem] + ("েড" if stem.endswith(("t", "d")) else "ড")
+        if clean_word[:-1] in COMMON_PRONUNCIATION_DICT:  # e.g. create -> created
+            return COMMON_PRONUNCIATION_DICT[clean_word[:-1]] + "ড"
+    if clean_word.endswith("ing"):
+        stem = clean_word[:-3]
+        if stem in COMMON_PRONUNCIATION_DICT:
+            return COMMON_PRONUNCIATION_DICT[stem] + "ইং"
+        if (stem + "e") in COMMON_PRONUNCIATION_DICT:
+            return COMMON_PRONUNCIATION_DICT[stem + "e"] + "ইং"
     if clean_word.endswith("es") and clean_word[:-2] in COMMON_PRONUNCIATION_DICT:
         return COMMON_PRONUNCIATION_DICT[clean_word[:-2]] + "েস"
-    if clean_word.endswith("ed") and clean_word[:-2] in COMMON_PRONUNCIATION_DICT:
-        return COMMON_PRONUNCIATION_DICT[clean_word[:-2]] + "ড"
-    if clean_word.endswith("ing") and clean_word[:-3] in COMMON_PRONUNCIATION_DICT:
-        return COMMON_PRONUNCIATION_DICT[clean_word[:-3]] + "ইং"
+    if clean_word.endswith("s") and clean_word[:-1] in COMMON_PRONUNCIATION_DICT:
+        return COMMON_PRONUNCIATION_DICT[clean_word[:-1]] + "স"
     if clean_word.endswith("ly") and clean_word[:-2] in COMMON_PRONUNCIATION_DICT:
         return COMMON_PRONUNCIATION_DICT[clean_word[:-2]] + "লি"
+    if clean_word.endswith("wide") and clean_word[:-4] in COMMON_PRONUNCIATION_DICT:
+        return COMMON_PRONUNCIATION_DICT[clean_word[:-4]] + "ওয়াইড"
+    if clean_word.endswith("logical"):
+        stem_logy = clean_word[:-7] + "logy"
+        if stem_logy in COMMON_PRONUNCIATION_DICT:
+            return COMMON_PRONUNCIATION_DICT[stem_logy][:-4] + "লজিক্যাল"
 
     # 3. If IPA is provided, try IPA conversion
     if ipa:
@@ -996,6 +1263,39 @@ def transliterate_word_to_bengali(word: str, ipa: Optional[str] = None) -> str:
     length = len(w)
 
     while i < length:
+        # Check special multi-letter patterns
+        if w.startswith("ight", i):
+            result.append("াইট" if i > 0 else "আইট")
+            i += 4
+            continue
+        if w.startswith("igh", i):
+            result.append("াই" if i > 0 else "আই")
+            i += 3
+            continue
+        if w.startswith("wor", i):
+            result.append("ওয়ার")
+            i += 3
+            continue
+        if w.startswith("war", i):
+            result.append("ওয়ার")
+            i += 3
+            continue
+        if w.startswith("all", i):
+            result.append("অল")
+            i += 3
+            continue
+
+        # Soft C before e, i, y
+        if w[i] == "c" and i + 1 < length and w[i+1] in "eiy":
+            result.append("স")
+            i += 1
+            continue
+        # Soft G before e, i, y (when not beginning of short word like get)
+        if w[i] == "g" and i + 1 < length and w[i+1] in "eiy" and (i > 0 or length > 4):
+            result.append("জ")
+            i += 1
+            continue
+
         # Check 4-letter clusters
         if i + 4 <= length and w[i:i+4] in PHONEME_MAP:
             result.append(PHONEME_MAP[w[i:i+4]])
