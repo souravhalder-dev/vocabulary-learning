@@ -40,17 +40,32 @@ async function enrichRelationList(words: string[]) {
   const cleanList = Array.from(new Set(words.map((w) => w.replace(/[^a-zA-Z]/g, '').toLowerCase()).filter(Boolean))).slice(0, 3);
   const results = [];
   for (const w of cleanList) {
-    const pron = transliterateWordToBengali(w);
+    let ipa = '';
     let meaning = w;
     try {
-      const r = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&q=${w}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' }
-      });
-      if (r.ok) {
-        const d = await r.json();
+      const [dmRes, trRes] = await Promise.allSettled([
+        fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(w)}&ipa=1&max=1`),
+        fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&q=${encodeURIComponent(w)}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0' }
+        })
+      ]);
+      if (dmRes.status === 'fulfilled' && dmRes.value.ok) {
+        const d = await dmRes.value.json();
+        if (d?.[0]?.tags) {
+          for (const t of d[0].tags) {
+            if (t.startsWith('ipa_pron:')) {
+              ipa = t.replace('ipa_pron:', '');
+              break;
+            }
+          }
+        }
+      }
+      if (trRes.status === 'fulfilled' && trRes.value.ok) {
+        const d = await trRes.value.json();
         if (d?.[0]?.[0]?.[0]) meaning = d[0][0][0];
       }
     } catch {}
+    const pron = transliterateWordToBengali(w, ipa);
     results.push({
       word: w,
       bengali_pronunciation: pron,

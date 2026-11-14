@@ -232,9 +232,9 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
                         <span className="text-xs text-slate-300 bengali-text">বাংলা অর্থ ও উচ্চারণ খোঁজা হচ্ছে...</span>
                       </div>
                     ) : selectedWordVocab && selectedWordVocab.word.toLowerCase() === lower ? (
-                      <div className="space-y-1.5">
-                        {/* Header: Pronunciation & Audio & Close */}
-                        <div className="flex items-center justify-between gap-1">
+                      <div className="space-y-1">
+                        {/* Bengali Pronunciation Header */}
+                        <div className="flex items-center justify-between gap-1.5">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <button
                               type="button"
@@ -242,14 +242,14 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
                                 e.stopPropagation();
                                 speakEnglishText(selectedWordVocab.word, { rate: audioSpeed });
                               }}
-                              className="shrink-0 p-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-transform active:scale-90"
+                              className="shrink-0 p-1 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white transition-transform active:scale-90"
                               title="Listen"
                             >
-                              <Volume2 className="h-3.5 w-3.5" />
+                              <Volume2 className="h-3 w-3" />
                             </button>
 
-                            <div className="min-w-0 flex items-baseline gap-1">
-                              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold shrink-0">উচ্চারণ:</span>
+                            <div className="min-w-0 flex items-center gap-1">
+                              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-medium shrink-0">উচ্চারণ:</span>
                               <span className="bengali-text font-bold text-amber-300 text-xs sm:text-sm tracking-wide truncate">
                                 {selectedWordVocab.bengali_pronunciation}
                               </span>
@@ -263,30 +263,30 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
                               setActiveWord(null);
                               onClearSelectedWord?.();
                             }}
-                            className="shrink-0 text-slate-400 hover:text-white p-1 rounded-md hover:bg-slate-800"
+                            className="shrink-0 text-slate-400 hover:text-white p-0.5 rounded-md hover:bg-slate-800"
                             title="Close"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
                         </div>
 
-                        {/* Bengali Meaning */}
-                        <div className="pt-1 border-t border-slate-800/80 flex items-baseline gap-1">
+                        {/* Bengali Meaning: in a smaller font directly below Bengali pronunciation */}
+                        <div className="pt-1 border-t border-slate-800/80 leading-snug">
                           {selectedWordVocab.part_of_speech && (
-                            <span className="text-[10px] text-indigo-300 font-semibold italic shrink-0">
+                            <span className="text-[10px] text-indigo-300/90 font-medium italic mr-1 shrink-0">
                               ({selectedWordVocab.part_of_speech})
                             </span>
                           )}
-                          <span className="bengali-text font-bold text-xs sm:text-sm text-slate-100 line-clamp-2 leading-snug">
+                          <span className="bengali-text text-[11px] sm:text-xs text-slate-200 font-normal line-clamp-2">
                             {selectedWordVocab.bengali_meaning}
                           </span>
                         </div>
 
                         {/* Synonyms Preview (if available) */}
                         {synonyms.length > 0 && (
-                          <div className="pt-0.5 text-[10px] text-emerald-300/90 flex items-center gap-1 truncate">
+                          <div className="pt-0.5 text-[9.5px] sm:text-[10px] text-emerald-300/80 flex items-center gap-1 truncate">
                             <span className="font-semibold text-emerald-400 shrink-0">Syn:</span>
-                            <span className="truncate">{synonyms.slice(0, 3).map(s => s.word).join(', ')}</span>
+                            <span className="truncate text-slate-300">{synonyms.slice(0, 3).map(s => s.word).join(', ')}</span>
                           </div>
                         )}
                       </div>

@@ -17,21 +17,72 @@ if settings.GEMINI_API_KEY:
         print(f"Warning: Could not initialize Gemini client: {e}")
 
 
+async def fetch_accurate_word_pronunciation(word: str, client: httpx.AsyncClient) -> tuple[str, str]:
+    """
+    Fetches genuine IPA phonetics from multi-source APIs (Free Dictionary API -> Datamuse API)
+    and converts to authentic standard British English Bengali pronunciation.
+    Returns (bengali_pronunciation, ipa_str).
+    """
+    clean = re.sub(r"[^a-zA-Z]", "", word).strip().lower()
+    if not clean:
+        return ("", "")
+
+    from app.services.bengali_phonetics import COMMON_PRONUNCIATION_DICT
+    if clean in COMMON_PRONUNCIATION_DICT:
+        return (COMMON_PRONUNCIATION_DICT[clean], "")
+
+    ipa = ""
+    # Primary API: Free Dictionary API (Oxford/Cambridge/Wiktionary IPA)
+    try:
+        r = await client.get(f"https://api.dictionaryapi.dev/api/v2/entries/en/{clean}", headers={"User-Agent": "Mozilla/5.0"}, timeout=2.5)
+        if r.status_code == 200:
+            entries = r.json()
+            if entries and isinstance(entries, list):
+                first = entries[0]
+                ipa = first.get("phonetic", "") or ""
+                if not ipa and "phonetics" in first:
+                    for p in first["phonetics"]:
+                        if p.get("text"):
+                            ipa = p["text"]
+                            if "uk" in p.get("audio", "").lower():
+                                break
+    except Exception:
+        pass
+
+    # Secondary API Fallback: Datamuse Phonetic API (Carnegie Mellon / IPA tags)
+    if not ipa:
+        try:
+            r2 = await client.get(f"https://api.datamuse.com/words?sp={clean}&qe=sp&md=dfrps&ipa=1&max=1", headers={"User-Agent": "Mozilla/5.0"}, timeout=2.5)
+            if r2.status_code == 200:
+                data = r2.json()
+                if data and "tags" in data[0]:
+                    for tag in data[0]["tags"]:
+                        if tag.startswith("ipa_pron:"):
+                            ipa = tag.replace("ipa_pron:", "")
+                            break
+        except Exception:
+            pass
+
+    pron = transliterate_word_to_bengali(clean, ipa)
+    return (pron, ipa)
+
+
 async def enrich_word_relations(words: List[str]) -> List[Dict[str, str]]:
     """
     Takes a list of English words (synonyms or antonyms) and enriches each with its
-    Bengali phonetic pronunciation and Bengali meaning.
+    reliable Bengali phonetic pronunciation and simple Bengali meaning using multi-source APIs.
     """
     results = []
     clean_words = list(dict.fromkeys([re.sub(r"[^a-zA-Z]", "", w).strip().lower() for w in words if w]))[:3]
     if not clean_words:
         return results
 
-    async with httpx.AsyncClient(timeout=3.0) as client:
+    async with httpx.AsyncClient(timeout=3.5) as client:
         for w in clean_words:
             if not w or len(w) < 2:
                 continue
-            pron = transliterate_word_to_bengali(w)
+            
+            pron, _ = await fetch_accurate_word_pronunciation(w, client)
             meaning = ""
             try:
                 r = await client.get(
