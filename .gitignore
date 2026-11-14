@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+backend/venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Next.js build
+frontend/.next/
+frontend/out/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Databases & local uploads
+*.db
+backend/app.db
+backend/uploads/
+uploads/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

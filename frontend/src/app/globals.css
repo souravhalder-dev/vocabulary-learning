@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-bengali: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+  --font-heading: 'Outfit', 'Inter', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-inter);
+  background-color: #f8fafc;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+}
+
+.dark body {
+  background-color: #090d16;
+  color: #f1f5f9;
+}
+
+.bengali-text {
+  font-family: var(--font-bengali);
+}
+
+.heading-font {
+  font-family: var(--font-heading);
+}
+
+/* Custom smooth scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Smooth momentum scrolling for containers */
+.smooth-scroll-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Interactive word styling with touch-optimized targets */
+.reader-word {
+  display: inline-block;
+  padding: 1px 3.5px;
+  margin: 0 1px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease, color 0.15s ease;
+  user-select: text;
+}
+
+@media (max-width: 640px) {
+  .reader-word {
+    padding: 2px 4px;
+    margin: 1px 1px;
+    line-height: 2.1;
+  }
+}
+
+.reader-word:hover {
+  background-color: #e0e7ff;
+  color: #3730a3;
+  transform: translateY(-1px);
+}
+
+.reader-word:active {
+  transform: scale(0.96);
+  background-color: #c7d2fe;
+}
+
+.dark .reader-word:hover {
+  background-color: #312e81;
+  color: #e0e7ff;
+}
+
+.dark .reader-word:active {
+  background-color: #3730a3;
+}
+
+.reader-word.active-word {
+  background-color: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+  font-weight: 600;
+}
+
+.reader-word.learned-word {
+  border-bottom: 2px solid #10b981;
+}
+
+.reader-word.saved-word {
+  border-bottom: 2px solid #6366f1;
+}
+
+/* Mobile bottom sheet animations */
+@keyframes slideUpSheet {
+  from {
+    transform: translateY(100%);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUpSheet 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
