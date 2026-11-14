@@ -14,7 +14,9 @@ import {
   Volume2,
   CheckCircle2,
   TrendingUp,
-  BrainCircuit
+  BrainCircuit,
+  Layers,
+  BookOpenText
 } from 'lucide-react';
 import { DocumentItem, VocabularyItem, DashboardStats } from '../types';
 import { speakEnglishText } from '../lib/speech';
@@ -28,6 +30,8 @@ interface DashboardViewProps {
   onOpenTranslate: () => void;
   onOpenAiAssistant: () => void;
   onNavigateToNotebook: () => void;
+  onNavigateToReader?: () => void;
+  onStartFlashcards?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -39,6 +43,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenTranslate,
   onOpenAiAssistant,
   onNavigateToNotebook,
+  onNavigateToReader,
+  onStartFlashcards,
 }) => {
   const latestDoc = recentDocs[0];
   const percentLearned = stats.total_vocabularies > 0 
@@ -61,26 +67,81 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             বাস্তব ইংরেজি কনটেন্ট পড়ুন, যেকোনো শব্দে ট্যাপ করলেই তাৎক্ষণিক বাংলা উচ্চারণ ও অর্থ জানুন এবং নোটবুকে স্বয়ংক্রিয়ভাবে সংরক্ষণ করুন।
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-2.5 pt-2">
             <button
               onClick={onOpenImport}
-              className="flex items-center gap-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 px-4 py-2.5 text-xs font-bold text-white shadow-md transition-colors"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 px-4 py-2.5 text-xs font-bold text-white shadow-md transition-colors"
             >
               <UploadCloud className="h-4 w-4" />
-              <span>Import PDF or Article</span>
+              <span>Import Content</span>
             </button>
             <button
               onClick={onOpenTranslate}
-              className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 px-4 py-2.5 text-xs font-semibold text-white backdrop-blur-xs transition-colors"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 px-4 py-2.5 text-xs font-semibold text-white backdrop-blur-xs transition-colors"
             >
               <Languages className="h-4 w-4 text-indigo-300" />
-              <span>Translate Sentence</span>
+              <span>Translate</span>
             </button>
           </div>
         </div>
 
         {/* Decorative background glow */}
-        <div className="absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
+        <div className="absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+      </div>
+
+      {/* Mobile-First Quick Tool Launchpad (1-tap access on any smartphone, tablet, or PC) */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <button
+          onClick={() => (onNavigateToReader ? onNavigateToReader() : latestDoc && onSelectDocument(latestDoc))}
+          className="flex flex-col justify-between rounded-2xl border border-indigo-100 bg-white p-3.5 sm:p-4 text-left shadow-2xs transition-all hover:border-indigo-300 hover:shadow-md dark:border-indigo-950/60 dark:bg-slate-900 group"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 mb-2 group-hover:scale-105 transition-transform">
+            <BookOpenText className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">Reading Room</div>
+            <p className="bengali-text text-[11px] text-slate-500 line-clamp-1 mt-0.5">শব্দে ট্যাপ করে পড়ুন</p>
+          </div>
+        </button>
+
+        <button
+          onClick={onOpenTranslate}
+          className="flex flex-col justify-between rounded-2xl border border-violet-100 bg-white p-3.5 sm:p-4 text-left shadow-2xs transition-all hover:border-violet-300 hover:shadow-md dark:border-violet-950/60 dark:bg-slate-900 group"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-950/70 dark:text-violet-400 mb-2 group-hover:scale-105 transition-transform">
+            <Languages className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">Translator</div>
+            <p className="bengali-text text-[11px] text-slate-500 line-clamp-1 mt-0.5">অনুবাদ ও উচ্চারণ</p>
+          </div>
+        </button>
+
+        <button
+          onClick={() => (onStartFlashcards ? onStartFlashcards() : onNavigateToNotebook())}
+          className="flex flex-col justify-between rounded-2xl border border-emerald-100 bg-white p-3.5 sm:p-4 text-left shadow-2xs transition-all hover:border-emerald-300 hover:shadow-md dark:border-emerald-950/60 dark:bg-slate-900 group"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 mb-2 group-hover:scale-105 transition-transform">
+            <Layers className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">Flashcards</div>
+            <p className="bengali-text text-[11px] text-slate-500 line-clamp-1 mt-0.5">স্মৃতিকোষ অনুশীলন</p>
+          </div>
+        </button>
+
+        <button
+          onClick={onOpenAiAssistant}
+          className="flex flex-col justify-between rounded-2xl border border-amber-100 bg-white p-3.5 sm:p-4 text-left shadow-2xs transition-all hover:border-amber-300 hover:shadow-md dark:border-amber-950/60 dark:bg-slate-900 group"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/70 dark:text-amber-400 mb-2 group-hover:scale-105 transition-transform">
+            <BrainCircuit className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">AI Tutor</div>
+            <p className="bengali-text text-[11px] text-slate-500 line-clamp-1 mt-0.5">সহজ বাংলা ব্যাখ্যা</p>
+          </div>
+        </button>
       </div>
 
       {/* Stats Cards */}

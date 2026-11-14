@@ -55,7 +55,13 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
   ];
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800">
+    <>
+      <div 
+        className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+        onClick={onClose}
+        aria-label="Close backdrop"
+      />
+      <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 p-4 dark:border-slate-800">
         <div className="flex items-center gap-2">
@@ -182,5 +188,6 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
         )}
       </div>
     </div>
+    </>
   );
 };

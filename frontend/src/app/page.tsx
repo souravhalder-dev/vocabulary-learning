@@ -194,7 +194,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20 md:pb-0">
       {/* Top Navigation */}
       <Navbar
         onOpenImport={() => setShowImportModal(true)}
@@ -217,10 +217,11 @@ export default function Home() {
           activeTab={activeTab}
           onSelectTab={setActiveTab}
           vocabCount={vocabularies.length}
+          onOpenImport={() => setShowImportModal(true)}
         />
 
         {/* Center Workspace Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
           {activeTab === 'dashboard' && (
             <DashboardView
               stats={stats}
@@ -237,6 +238,8 @@ export default function Home() {
                 setShowAiAssistant(true);
               }}
               onNavigateToNotebook={() => setActiveTab('notebook')}
+              onNavigateToReader={() => setActiveTab('reader')}
+              onStartFlashcards={() => setShowFlashcards(true)}
             />
           )}
 
@@ -250,7 +253,7 @@ export default function Home() {
           )}
 
           {activeTab === 'reader' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-7rem)]">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 h-[calc(100dvh-8rem)] sm:h-[calc(100vh-7rem)]">
               {/* Left/Center Main Reading Area */}
               <div className="lg:col-span-8 h-full">
                 {selectedDoc ? (
@@ -339,8 +342,8 @@ export default function Home() {
 
       {/* Slide-out Sentence Translation Modal */}
       {showTranslatePanel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-3 sm:p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-2xl sm:rounded-3xl smooth-scroll-container">
             <SentenceTranslationPanel
               initialText={translateInitialText}
               onClose={() => setShowTranslatePanel(false)}

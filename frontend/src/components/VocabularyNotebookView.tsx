@@ -184,8 +184,138 @@ export const VocabularyNotebookView: React.FC<VocabularyNotebookViewProps> = ({
         </div>
       </div>
 
-      {/* Vocabulary Table (matching prompt specification table) */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+      {/* Mobile Card List View (Optimized for smartphones and small tablets) */}
+      <div className="space-y-3 md:hidden">
+        {filteredVocabularies.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+            <BookOpen className="mx-auto mb-2 h-8 w-8 text-slate-300 dark:text-slate-600" />
+            <p className="font-semibold text-sm text-slate-700 dark:text-slate-300">কোনো শব্দ পাওয়া যায়নি</p>
+            <p className="bengali-text text-xs text-slate-400 mt-1">পড়ার সময় শব্দে ট্যাপ করলেই স্বয়ংক্রিয়ভাবে এখানে যুক্ত হবে।</p>
+          </div>
+        ) : (
+          filteredVocabularies.map((vocab) => {
+            const isEditing = editingId === vocab.id;
+            return (
+              <div
+                key={vocab.id}
+                className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3"
+              >
+                {/* Header: Word + Audio + Learned Toggle */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleToggleLearned(vocab.id, vocab.is_learned)}
+                      className="p-1 -ml-1 text-slate-400 hover:text-emerald-600 transition-colors"
+                      title={vocab.is_learned ? 'Mark as learning' : 'Mark as learned'}
+                    >
+                      {vocab.is_learned ? (
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-slate-300 dark:text-slate-600" />
+                      )}
+                    </button>
+                    <div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="font-extrabold text-base text-slate-900 dark:text-white capitalize">
+                          {vocab.word}
+                        </span>
+                        {vocab.part_of_speech && (
+                          <span className="text-[10px] font-semibold text-slate-400 italic">
+                            ({vocab.part_of_speech})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => speakEnglishText(vocab.word, { rate: 0.85 })}
+                      className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950 dark:text-indigo-400"
+                      title="Audio Pronunciation"
+                    >
+                      <Volume2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => (isEditing ? saveEditing(vocab.id) : startEditing(vocab))}
+                      className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                      title={isEditing ? 'Save' : 'Edit'}
+                    >
+                      {isEditing ? <Check className="h-4 w-4 text-emerald-600" /> : <Edit2 className="h-3.5 w-3.5" />}
+                    </button>
+                    <button
+                      onClick={() => onDeleteVocabulary(vocab.id)}
+                      className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-400"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pronunciation & Meaning Badges */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-2.5 dark:border-indigo-950/50 dark:bg-indigo-950/30">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-0.5">
+                      বাংলা উচ্চারণ
+                    </div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editPronunciation}
+                        onChange={(e) => setEditPronunciation(e.target.value)}
+                        className="bengali-text w-full rounded border border-indigo-400 px-1.5 py-0.5 text-xs dark:bg-slate-800 dark:text-white"
+                      />
+                    ) : (
+                      <p className="bengali-text text-base font-bold text-indigo-900 dark:text-indigo-200">
+                        {vocab.bengali_pronunciation}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
+                      বাংলা অর্থ
+                    </div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editMeaning}
+                        onChange={(e) => setEditMeaning(e.target.value)}
+                        className="bengali-text w-full rounded border border-indigo-400 px-1.5 py-0.5 text-xs dark:bg-slate-800 dark:text-white"
+                      />
+                    ) : (
+                      <p className="bengali-text text-sm font-semibold text-slate-800 dark:text-slate-100 line-clamp-2">
+                        {vocab.bengali_meaning}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Example sentence if available */}
+                {vocab.example_sentence && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 italic bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg line-clamp-2">
+                    "{vocab.example_sentence}"
+                  </p>
+                )}
+
+                {/* Footer source info */}
+                <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <span className="truncate max-w-[200px]">
+                    {vocab.document_title || 'General Article'}
+                  </span>
+                  <span className={`font-semibold ${vocab.is_learned ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {vocab.is_learned ? 'Learned' : 'In Progress'}
+                  </span>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Vocabulary Table (Hidden on mobile) */}
+      <div className="hidden md:block overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>

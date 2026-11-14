@@ -156,7 +156,7 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
                 setCopiedSentence(sentence.trim());
                 setTimeout(() => setCopiedSentence(null), 2000);
               }}
-              className="inline-flex items-center ml-1 opacity-0 group-hover/sentence:opacity-100 focus:opacity-100 transition-opacity p-1 rounded-md text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100/60 dark:text-indigo-400 dark:hover:bg-indigo-950/80 align-middle"
+              className="inline-flex items-center ml-1 opacity-70 sm:opacity-0 sm:group-hover/sentence:opacity-100 focus:opacity-100 transition-opacity p-1 rounded-md text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100/60 dark:text-indigo-400 dark:hover:bg-indigo-950/80 align-middle"
               title="Translate this sentence to Bengali"
             >
               {copiedSentence === sentence.trim() ? (

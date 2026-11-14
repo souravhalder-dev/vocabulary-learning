@@ -94,7 +94,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
                       e.stopPropagation();
                       onDeleteDocument(doc.id);
                     }}
-                    className="opacity-0 group-hover:opacity-100 rounded-lg p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 transition-opacity"
+                    className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 transition-opacity"
                     title="Delete document"
                   >
                     <Trash2 className="h-4 w-4" />

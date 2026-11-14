@@ -1,6 +1,4 @@
-'use client';
-
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   LayoutDashboard, 
   Library, 
@@ -10,20 +8,27 @@ import {
   BrainCircuit, 
   Layers, 
   Settings,
-  Sparkles
+  Sparkles,
+  Menu,
+  X,
+  UploadCloud
 } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
   onSelectTab: (tab: string) => void;
   vocabCount?: number;
+  onOpenImport?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onSelectTab,
   vocabCount = 0,
+  onOpenImport,
 }) => {
+  const [showMobileMore, setShowMobileMore] = useState<boolean>(false);
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'library', label: 'My Library', icon: Library },
@@ -34,6 +39,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'assistant', label: 'AI Language Tutor', icon: BrainCircuit },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
+
+  const handleMobileNavClick = (tabId: string) => {
+    setShowMobileMore(false);
+    onSelectTab(tabId);
+  };
 
   return (
     <>
@@ -86,13 +96,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-slate-200 bg-white/95 px-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
+      {/* Mobile Bottom Navigation Bar with Safe Area Support */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-slate-200/90 bg-white/95 px-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 shadow-lg">
         {[
           { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-          { id: 'library', label: 'Library', icon: Library },
           { id: 'reader', label: 'Reader', icon: BookOpenText },
-          { id: 'notebook', label: 'Notebook', icon: BookmarkCheck },
+          { id: 'notebook', label: 'Notebook', icon: BookmarkCheck, badge: vocabCount },
           { id: 'translator', label: 'Translate', icon: Languages },
         ].map((item) => {
           const Icon = item.icon;
@@ -100,19 +109,133 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <button
               key={item.id}
-              onClick={() => onSelectTab(item.id)}
-              className={`flex flex-col items-center justify-center gap-1 py-1 px-2 text-xs font-medium ${
+              onClick={() => handleMobileNavClick(item.id)}
+              className={`relative flex flex-col items-center justify-center gap-1 py-1 px-3 text-[11px] font-medium transition-colors ${
                 isActive
-                  ? 'text-indigo-600 dark:text-indigo-400 font-semibold'
+                  ? 'text-indigo-600 dark:text-indigo-400 font-bold'
                   : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
               }`}
             >
-              <Icon className="h-5 w-5" />
+              <div className="relative">
+                <Icon className={`h-5 w-5 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[9px] font-bold text-white">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
+              </div>
               <span>{item.label}</span>
+              {isActive && (
+                <span className="absolute bottom-1 h-0.5 w-6 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+              )}
             </button>
           );
         })}
+
+        {/* More Tools Button */}
+        <button
+          onClick={() => setShowMobileMore(!showMobileMore)}
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 text-[11px] font-medium transition-colors ${
+            showMobileMore || ['library', 'flashcards', 'assistant', 'settings'].includes(activeTab)
+              ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+          }`}
+        >
+          <Menu className="h-5 w-5 stroke-2" />
+          <span>More</span>
+        </button>
       </nav>
+
+      {/* Mobile More Sheet */}
+      {showMobileMore && (
+        <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div 
+            className="fixed inset-0" 
+            onClick={() => setShowMobileMore(false)} 
+            aria-label="Close"
+          />
+          <div className="relative z-10 rounded-t-3xl border-t border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-slide-up pb-24 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+              <span className="font-extrabold text-sm text-slate-900 dark:text-white">
+                All Learning Tools & Features
+              </span>
+              <button
+                onClick={() => setShowMobileMore(false)}
+                className="rounded-full p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                onClick={() => handleMobileNavClick('flashcards')}
+                className="flex items-center gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/70 p-3 text-left dark:border-indigo-950/60 dark:bg-indigo-950/40"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
+                  <Layers className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="font-bold text-xs text-slate-900 dark:text-white">Flashcards</div>
+                  <div className="bengali-text text-[11px] text-slate-500">স্মৃতিকোষ অনুশীলন</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleMobileNavClick('assistant')}
+                className="flex items-center gap-3 rounded-2xl border border-violet-100 bg-violet-50/70 p-3 text-left dark:border-violet-950/60 dark:bg-violet-950/40"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white">
+                  <BrainCircuit className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="font-bold text-xs text-slate-900 dark:text-white">AI Tutor</div>
+                  <div className="bengali-text text-[11px] text-slate-500">সহজ বাংলা ব্যাখ্যা</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleMobileNavClick('library')}
+                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-3 text-left dark:border-slate-800 dark:bg-slate-800/50"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-white dark:bg-slate-700">
+                  <Library className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="font-bold text-xs text-slate-900 dark:text-white">Library</div>
+                  <div className="bengali-text text-[11px] text-slate-500">সংরক্ষিত আর্টিকেল</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleMobileNavClick('settings')}
+                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-3 text-left dark:border-slate-800 dark:bg-slate-800/50"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                  <Settings className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="font-bold text-xs text-slate-900 dark:text-white">Settings</div>
+                  <div className="bengali-text text-[11px] text-slate-500">অডিও ও সেটিংস</div>
+                </div>
+              </button>
+            </div>
+
+            {onOpenImport && (
+              <button
+                onClick={() => {
+                  setShowMobileMore(false);
+                  onOpenImport();
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 p-3 text-xs font-bold text-white shadow-md hover:bg-indigo-500 transition-colors"
+              >
+                <UploadCloud className="h-4 w-4" />
+                <span>Import Content (PDF / URL / OCR / Text)</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 };

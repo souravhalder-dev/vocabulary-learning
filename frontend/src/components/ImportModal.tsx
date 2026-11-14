@@ -73,12 +73,12 @@ export const ImportModal: React.FC<ImportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-3 sm:p-4 backdrop-blur-sm">
+      <div className="w-full max-w-xl max-h-[90dvh] overflow-y-auto rounded-3xl bg-white p-4.5 sm:p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 smooth-scroll-container">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
           <div>
-            <h3 className="heading-font text-lg font-bold text-slate-900 dark:text-white">
+            <h3 className="heading-font text-base sm:text-lg font-bold text-slate-900 dark:text-white">
               Import English Content
             </h3>
             <p className="bengali-text text-xs text-slate-500">
@@ -87,53 +87,53 @@ export const ImportModal: React.FC<ImportModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Tab Switcher */}
-        <div className="grid grid-cols-4 gap-1.5 rounded-xl bg-slate-100 p-1 mt-4 dark:bg-slate-800 text-xs font-semibold">
+        <div className="grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1 mt-3 sm:mt-4 dark:bg-slate-800 text-[11px] sm:text-xs font-semibold">
           <button
             type="button"
             onClick={() => setActiveTab('pdf')}
-            className={`flex items-center justify-center gap-1.5 rounded-lg py-2 transition-all ${
+            className={`flex items-center justify-center gap-1 sm:gap-1.5 rounded-lg py-2 transition-all ${
               activeTab === 'pdf' ? 'bg-white text-indigo-700 shadow-xs dark:bg-slate-700 dark:text-indigo-300 font-bold' : 'text-slate-600 dark:text-slate-400'
             }`}
           >
-            <UploadCloud className="h-4 w-4" />
-            <span>PDF File</span>
+            <UploadCloud className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span>PDF<span className="hidden sm:inline"> File</span></span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('url')}
-            className={`flex items-center justify-center gap-1.5 rounded-lg py-2 transition-all ${
+            className={`flex items-center justify-center gap-1 sm:gap-1.5 rounded-lg py-2 transition-all ${
               activeTab === 'url' ? 'bg-white text-indigo-700 shadow-xs dark:bg-slate-700 dark:text-indigo-300 font-bold' : 'text-slate-600 dark:text-slate-400'
             }`}
           >
-            <Globe className="h-4 w-4" />
-            <span>Web URL</span>
+            <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span><span className="hidden sm:inline">Web </span>URL</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('ocr')}
-            className={`flex items-center justify-center gap-1.5 rounded-lg py-2 transition-all ${
+            className={`flex items-center justify-center gap-1 sm:gap-1.5 rounded-lg py-2 transition-all ${
               activeTab === 'ocr' ? 'bg-white text-indigo-700 shadow-xs dark:bg-slate-700 dark:text-indigo-300 font-bold' : 'text-slate-600 dark:text-slate-400'
             }`}
           >
-            <ImageIcon className="h-4 w-4" />
-            <span>Image OCR</span>
+            <ImageIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span>OCR</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('text')}
-            className={`flex items-center justify-center gap-1.5 rounded-lg py-2 transition-all ${
+            className={`flex items-center justify-center gap-1 sm:gap-1.5 rounded-lg py-2 transition-all ${
               activeTab === 'text' ? 'bg-white text-indigo-700 shadow-xs dark:bg-slate-700 dark:text-indigo-300 font-bold' : 'text-slate-600 dark:text-slate-400'
             }`}
           >
-            <FileText className="h-4 w-4" />
-            <span>Paste Text</span>
+            <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span>Text</span>
           </button>
         </div>
 
