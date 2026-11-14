@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { transliterateSentenceToBengali, transliterateWordToBengali } from '@/lib/phonetics';
+import { transliterateSentenceToBengaliAsync, fetchAccuratePronunciationOnline } from '@/lib/phonetics';
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,13 +22,15 @@ export async function POST(req: NextRequest) {
       }
     } catch {}
 
-    const bengaliPron = transliterateSentenceToBengali(text);
+    const bengaliPron = await transliterateSentenceToBengaliAsync(text);
     const words = text.split(/\s+/).slice(0, 4);
-    const vocabBreakdown = words.map((w: string) => ({
-      word: w,
-      bengali_meaning: transliterateWordToBengali(w),
-      role: 'vocabulary'
-    }));
+    const vocabBreakdown = await Promise.all(
+      words.map(async (w: string) => ({
+        word: w,
+        bengali_meaning: await fetchAccuratePronunciationOnline(w),
+        role: 'vocabulary'
+      }))
+    );
 
     return NextResponse.json({
       result: `Analysis for: "${text}"`,

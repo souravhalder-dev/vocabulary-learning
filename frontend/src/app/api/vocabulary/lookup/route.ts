@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { transliterateWordToBengali, COMMON_BENGALI_MEANINGS } from '@/lib/phonetics';
+import { fetchAccuratePronunciationOnline } from '@/lib/phonetics';
 
-async function fetchBengaliMeaning(word: string): Promise<{ meaning: string; pos: string }> {
-  if (COMMON_BENGALI_MEANINGS[word]) {
-    return { meaning: COMMON_BENGALI_MEANINGS[word], pos: 'word' };
-  }
+async function fetchBengaliMeaning(word: string) {
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&dt=bd&q=${encodeURIComponent(word)}`;
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': '*/*',
-      },
-    });
+    const res = await fetch(
+      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&dt=bd&dt=rm&q=${encodeURIComponent(word)}`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': '*/*',
+        },
+      }
+    );
     if (res.ok) {
       const data = await res.json();
       const primary = data?.[0]?.[0]?.[0] || '';
@@ -28,48 +27,36 @@ async function fetchBengaliMeaning(word: string): Promise<{ meaning: string; pos
       return {
         meaning: combined.slice(0, 4).join(' / ') || primary || word,
         pos: pos || 'word',
+        googleIpa: data?.[0]?.[1]?.[3] || '',
       };
     }
   } catch (e) {
     console.warn('Meaning lookup notice:', e);
   }
-  return { meaning: word, pos: 'word' };
+  return { meaning: word, pos: 'word', googleIpa: '' };
 }
 
 async function enrichRelationList(words: string[]) {
   const cleanList = Array.from(new Set(words.map((w) => w.replace(/[^a-zA-Z]/g, '').toLowerCase()).filter(Boolean))).slice(0, 3);
   const results = [];
   for (const w of cleanList) {
-    let ipa = '';
     let meaning = w;
     try {
-      const [dmRes, trRes] = await Promise.allSettled([
-        fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(w)}&ipa=1&max=1`),
-        fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&q=${encodeURIComponent(w)}`, {
-          headers: { 'User-Agent': 'Mozilla/5.0' }
-        })
-      ]);
-      if (dmRes.status === 'fulfilled' && dmRes.value.ok) {
-        const d = await dmRes.value.json();
-        if (d?.[0]?.tags) {
-          for (const t of d[0].tags) {
-            if (t.startsWith('ipa_pron:')) {
-              ipa = t.replace('ipa_pron:', '');
-              break;
-            }
-          }
-        }
-      }
-      if (trRes.status === 'fulfilled' && trRes.value.ok) {
-        const d = await trRes.value.json();
+      const trRes = await fetch(
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&q=${encodeURIComponent(w)}`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' } }
+      );
+      if (trRes.ok) {
+        const d = await trRes.json();
         if (d?.[0]?.[0]?.[0]) meaning = d[0][0][0];
       }
     } catch {}
-    const pron = transliterateWordToBengali(w, ipa);
+
+    const pron = await fetchAccuratePronunciationOnline(w);
     results.push({
       word: w,
       bengali_pronunciation: pron,
-      bengali_meaning: meaning
+      bengali_meaning: meaning,
     });
   }
   return results;
@@ -84,7 +71,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ detail: 'Invalid word' }, { status: 400 });
     }
 
-    const { meaning: bengaliMeaning, pos } = await fetchBengaliMeaning(cleanWord);
+    const { meaning: bengaliMeaning, pos, googleIpa } = await fetchBengaliMeaning(cleanWord);
 
     let englishDefinition = `Contextual usage and definition of '${cleanWord}'.`;
     let ipaPhonetic = '';
@@ -92,7 +79,7 @@ export async function POST(req: NextRequest) {
     const rawSynonyms: string[] = [];
     const rawAntonyms: string[] = [];
 
-    // Dictionary API lookup for definitions and IPA
+    // 1. Primary: Free Dictionary API lookup for definitions, part of speech, IPA, synonyms, antonyms
     try {
       const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${cleanWord}`, {
         headers: { 'User-Agent': 'Mozilla/5.0' }
@@ -130,7 +117,31 @@ export async function POST(req: NextRequest) {
       console.warn('Dictionary dev lookup notice:', e);
     }
 
-    // Datamuse fallback for synonyms & antonyms
+    // 2. Secondary: Datamuse fallback for IPA, definitions, synonyms, antonyms
+    try {
+      const datamuseRes = await fetch(
+        `https://api.datamuse.com/words?sp=${encodeURIComponent(cleanWord)}&qe=sp&md=dfrps&ipa=1&max=1`
+      );
+      if (datamuseRes.ok) {
+        const dmData = await datamuseRes.json();
+        if (Array.isArray(dmData) && dmData.length > 0) {
+          const dm = dmData[0];
+          if (!ipaPhonetic && dm.tags) {
+            for (const t of dm.tags) {
+              if (t.startsWith('ipa_pron:')) {
+                ipaPhonetic = t.replace('ipa_pron:', '');
+                break;
+              }
+            }
+          }
+          if (dm.defs && dm.defs.length > 0 && englishDefinition.startsWith('Contextual usage')) {
+            englishDefinition = dm.defs[0].replace(/^[a-z]+\t/, '').trim();
+          }
+        }
+      }
+    } catch {}
+
+    // Datamuse relation fallback
     if (rawSynonyms.length === 0 || rawAntonyms.length === 0) {
       try {
         if (rawSynonyms.length === 0) {
@@ -150,7 +161,12 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
-    const bengaliPronunciation = transliterateWordToBengali(cleanWord, ipaPhonetic);
+    if (!ipaPhonetic && googleIpa) {
+      ipaPhonetic = googleIpa;
+    }
+
+    // 3. Multi-tier verified accurate pronunciation in Bengali script
+    const bengaliPronunciation = await fetchAccuratePronunciationOnline(cleanWord);
 
     const [synonyms, antonyms] = await Promise.all([
       enrichRelationList(rawSynonyms),

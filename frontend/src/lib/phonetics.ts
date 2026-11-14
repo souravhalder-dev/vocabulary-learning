@@ -592,15 +592,18 @@ const PHONEME_MAP: Record<string, string> = {
 };
 
 const IPA_CONSONANTS: [string, string][] = [
-  ["stɹ", "স্ট্র"], ["stj", "স্টু"], ["skw", "স্কু"], ["sk", "স্ক"], ["sp", "স্প"], ["st", "স্ট"],
-  ["tɹ", "ট্র"], ["dɹ", "ড্র"], ["bɹ", "ব্র"], ["kɹ", "ক্র"], ["ɡɹ", "গ্র"], ["pɹ", "প্র"], ["fɹ", "ফ্র"],
+  ["str", "স্ট্র"], ["stɹ", "স্ট্র"], ["stj", "স্টু"], ["skw", "স্কু"], ["skr", "স্ক্র"], ["skɹ", "স্ক্র"],
+  ["sk", "স্ক"], ["spr", "স্প্র"], ["spɹ", "স্প্র"], ["sp", "স্প"], ["st", "স্ট"],
+  ["tr", "ট্র"], ["tɹ", "ট্র"], ["dr", "ড্র"], ["dɹ", "ড্র"], ["br", "ব্র"], ["bɹ", "ব্র"],
+  ["kr", "ক্র"], ["kɹ", "ক্র"], ["gr", "গ্র"], ["ɡr", "গ্র"], ["ɡɹ", "গ্র"],
+  ["pr", "প্র"], ["pɹ", "প্র"], ["fr", "ফ্র"], ["fɹ", "ফ্র"],
   ["nt", "ন্ট"], ["nd", "ন্ড"], ["mp", "ম্প"], ["mb", "ম্ব"], ["ŋk", "ঙ্ক"], ["kt", "ক্ট"], ["ks", "ক্স"],
   ["ld", "ল্ড"], ["lt", "ল্ট"], ["rd", "র্ড"], ["rt", "র্ট"], ["rk", "র্ক"], ["rn", "র্ন"], ["rm", "র্ম"],
   ["kl", "ক্ল"], ["pl", "প্ল"], ["bl", "ব্ল"], ["fl", "ফ্ল"], ["gl", "গ্ল"],
   ["tʃ", "চ"], ["dʒ", "জ"], ["t͡ʃ", "চ"], ["d͡ʒ", "জ"],
   ["ʃ", "শ"], ["ʒ", "ঝ"], ["θ", "থ"], ["ð", "দ"], ["ŋ", "ং"],
   ["b", "ব"], ["p", "প"], ["d", "ড"], ["t", "ট"], ["k", "ক"], ["ɡ", "গ"], ["g", "গ"],
-  ["m", "ম"], ["n", "ন"], ["l", "ল"], ["ɹ", "র"], ["r", "র"], ["s", "স"], ["z", "জ"],
+  ["m", "ম"], ["n", "ন"], ["l", "ল"], ["ɫ", "ল"], ["ɹ", "র"], ["r", "র"], ["s", "স"], ["z", "জ"],
   ["f", "ফ"], ["v", "ভ"], ["w", "ওয়"], ["j", "ই"], ["h", "হ"]
 ];
 
@@ -608,14 +611,21 @@ const IPA_VOWELS: [string, string, string][] = [
   ["eɪ", "এই", "েই"], ["aɪ", "আই", "াই"], ["ɔɪ", "অয়", "য়"], ["aʊ", "আউ", "াউ"],
   ["əʊ", "ও", "ো"], ["oʊ", "ও", "ো"], ["juː", "ইউ", "িউ"], ["ju", "ইউ", "িউ"],
   ["iː", "ঈ", "ী"], ["uː", "উ", "ু"], ["ɔː", "অ", "ো"], ["ɑː", "আ", "া"],
+  ["wɜːld", "ওয়ার্ল্ড", "ওয়ার্ল্ড"], ["wɜld", "ওয়ার্ল্ড", "ওয়ার্ল্ড"],
   ["ɜːld", "ওয়ার্ল্ড", "ওয়ার্ল্ড"], ["ɜːr", "আর", "ার"], ["ɜː", "আ", "া"], ["ɜr", "আর", "ার"],
   ["ər", "আর", "ার"], ["ɚ", "আর", "ার"],
   ["tʃə", "চার", "চার"], ["tʃər", "চার", "চার"],
   ["ʃn", "শন", "শন"], ["ʃən", "শন", "শন"],
-  ["ənt", "এন্ট", "েন্ট"], ["ənts", "এন্টস", "েন্টস"], ["ənd", "এন্ড", "েন্ড"], ["ənds", "এন্ডস", "েন্ডস"],
+  ["ənt", "এন্ট", "েন্ট"], ["ʌnt", "এন্ট", "েন্ট"],
+  ["ənts", "এন্টস", "েন্টস"], ["ʌnts", "এন্টস", "েন্টস"],
+  ["ənd", "এন্ড", "েন্ড"], ["ʌnd", "এন্ড", "েন্ড"],
+  ["ənds", "এন্ডস", "েন্ডস"], ["ʌnds", "এন্ডস", "েন্ডস"],
   ["əns", "এন্স", "েন্স"], ["ənsɪz", "এন্সেস", "েন্সেস"],
   ["əbl", "এবল", "এবল"], ["ɪbl", "ইবল", "ইবল"],
+  ["mən", "ম্যান", "ম্যান"], ["mʌn", "ম্যান", "ম্যান"],
+  ["kɜːnəl", "কার্নেল", "কার্নেল"], ["kɜnəl", "কার্নেল", "কার্নেল"],
   ["æ", "অ্যা", "্যা"], ["a", "অ্যা", "্যা"], ["ɛ", "এ", "ে"], ["e", "এ", "ে"],
+  ["ɪd", "ইড", "েড"], ["əd", "ইড", "েড"],
   ["ɪ", "ই", "ি"], ["ɒ", "অ", "ো"], ["ɔ", "অ", "ো"], ["ɑ", "আ", "া"],
   ["ʌ", "আ", "া"], ["ʊ", "উ", "ু"], ["i", "ই", "ি"], ["u", "উ", "ু"],
   ["ə", "আ", "া"]
@@ -624,7 +634,25 @@ const IPA_VOWELS: [string, string, string][] = [
 export function ipaToBengaliPronunciation(ipaStr?: string): string | null {
   if (!ipaStr) return null;
   try {
-    const s = ipaStr.replace(/[\/\[\]ˌˈ:͡.]/g, "").replace("(j)", "j").replace("(ə)", "").replace("(ɹ)", "r").replace("(r)", "r").trim();
+    let s = ipaStr
+      .replace(/[\/\[\]ˌˈ.͡]/g, "")
+      .replace(/ɫ/g, "l")
+      .replace(/ɹ/g, "r")
+      .replace(/ɡ/g, "g")
+      .replace(/\(j\)/g, "j")
+      .replace(/\(ə\)/g, "")
+      .replace(/\(r\)/g, "r")
+      .replace(/\(ɹ\)/g, "r")
+      .trim();
+
+    s = s.replace(/wɜːld|wɜld/g, "ওয়ার্ল্ড");
+    s = s.replace(/waɪd/g, "ওয়াইড");
+    s = s.replace(/kriː?eɪtɪv|krieɪtɪv/g, "ক্রিয়েটিভ");
+    s = s.replace(/kriː?eɪt|krieɪt/g, "ক্রিয়েট");
+    s = s.replace(/kɜːnəl|kɜnəl/g, "কার্নেল");
+    s = s.replace(/ntɪd$|ntəd$/g, "ন্টেড");
+    s = s.replace(/mən$|mʌn$/g, "ম্যান");
+
     const result: string[] = [];
     let i = 0;
     const n = s.length;
@@ -876,4 +904,175 @@ export function transliterateSentenceToBengali(sentence: string): string {
   }
 
   return bengaliTokens.join("").trim();
+}
+
+const ARPA_VOWELS: Record<string, [string, string]> = {
+  AA: ["আ", "া"], AE: ["অ্যা", "্যা"], AH: ["অ", ""], AO: ["অ", "া"],
+  AW: ["আউ", "াউ"], AY: ["আই", "াই"], EH: ["এ", "ে"], ER: ["আর", "ার"],
+  EY: ["এই", "েই"], IH: ["ই", "ি"], IY: ["ই", "ি"], OW: ["ও", "ো"],
+  OY: ["অয়", "য়"], UH: ["উ", "ু"], UW: ["উ", "ু"]
+};
+
+const ARPA_CONSONANTS: Record<string, string> = {
+  B: "ব", CH: "চ", D: "ড", DH: "দ", F: "ফ", G: "গ", HH: "হ",
+  JH: "জ", K: "ক", L: "ল", M: "ম", N: "ন", NG: "ং", P: "প",
+  R: "র", S: "স", SH: "শ", T: "ট", TH: "থ", V: "ভ", W: "ওয়",
+  Y: "ইয়", Z: "জ", ZH: "ঝ"
+};
+
+export function arpaToBengali(arpaStr?: string): string | null {
+  if (!arpaStr) return null;
+  const tokens = arpaStr.trim().split(/\s+/).map(t => t.replace(/\d+/g, "").toUpperCase());
+  if (tokens.length === 0) return null;
+
+  const out: string[] = [];
+  let lastWasConsonant = false;
+
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (ARPA_VOWELS[t]) {
+      let [vFull, vMatra] = ARPA_VOWELS[t];
+      if (t === "AH" && i + 1 < tokens.length && (tokens[i + 1] === "N" || tokens[i + 1] === "NT")) {
+        vFull = "এ";
+        vMatra = "ে";
+      }
+      out.push(lastWasConsonant ? vMatra : vFull);
+      lastWasConsonant = false;
+    } else if (ARPA_CONSONANTS[t]) {
+      const c = ARPA_CONSONANTS[t];
+      if (lastWasConsonant && i > 0 && ARPA_CONSONANTS[tokens[i - 1]]) {
+        const prev = tokens[i - 1];
+        if (["N", "M", "S", "L", "R", "K"].includes(prev) && ["T", "D", "P", "B", "K", "S", "CH"].includes(t)) {
+          out.push("্" + c);
+        } else {
+          out.push(c);
+        }
+      } else {
+        out.push(c);
+      }
+      lastWasConsonant = true;
+    }
+  }
+
+  const res = out.join("").trim().replace(/([ািীুূেৈোৌ্])\1+/g, "$1");
+  return res.length >= 2 ? res : null;
+}
+
+export async function fetchAccuratePronunciationOnline(word: string): Promise<string> {
+  const clean = word.replace(/[^a-zA-Z]/g, "").trim().toLowerCase();
+  if (!clean) return "";
+
+  // 1. Check verified dictionary
+  if (COMMON_PRONUNCIATION_DICT[clean]) {
+    return COMMON_PRONUNCIATION_DICT[clean];
+  }
+
+  // 2. Free Dictionary API (Oxford/Cambridge IPA)
+  try {
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${clean}`, {
+      headers: { "User-Agent": "Mozilla/5.0" }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const first = data[0];
+        let ipa = first.phonetic || "";
+        if (!ipa && Array.isArray(first.phonetics)) {
+          for (const p of first.phonetics) {
+            if (p.text) {
+              ipa = p.text;
+              if ((p.audio || "").toLowerCase().includes("uk")) break;
+            }
+          }
+        }
+        if (ipa) {
+          const fromIpa = ipaToBengaliPronunciation(ipa);
+          if (fromIpa) return fromIpa;
+        }
+      }
+    }
+  } catch {}
+
+  // 3. Datamuse API (CMUdict 134k+ words)
+  try {
+    const res = await fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(clean)}&qe=sp&md=dfrps&ipa=1&max=1`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.[0]?.tags) {
+        for (const t of data[0].tags) {
+          if (t.startsWith("ipa_pron:")) {
+            const ipa = t.replace("ipa_pron:", "");
+            const fromIpa = ipaToBengaliPronunciation(ipa);
+            if (fromIpa) return fromIpa;
+          }
+        }
+        for (const t of data[0].tags) {
+          if (t.startsWith("pron:")) {
+            const arpa = t.replace("pron:", "").trim();
+            const fromArpa = arpaToBengali(arpa);
+            if (fromArpa) return fromArpa;
+          }
+        }
+      }
+    }
+  } catch {}
+
+  // 4. Google GTX Phonetics Fallback
+  try {
+    const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&dt=bd&dt=rm&q=${encodeURIComponent(clean)}`, {
+      headers: { "User-Agent": "Mozilla/5.0" }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.[0]?.[1]?.[3]) {
+        const fromGoogle = ipaToBengaliPronunciation(data[0][1][3]);
+        if (fromGoogle) return fromGoogle;
+      }
+    }
+  } catch {}
+
+  // 5. Intelligent Grapheme-to-Phoneme Fallback
+  return transliterateWordToBengali(clean);
+}
+
+export async function transliterateSentenceToBengaliAsync(sentence: string): Promise<string> {
+  const cleanSent = sentence.trim();
+  if (!cleanSent) return "";
+
+  const tokens = cleanSent.split(/(\s+|[.,!?;:"'()\[\]{}—–])/g);
+  const words = Array.from(new Set(
+    tokens
+      .map(t => t.replace(/[^a-zA-Z]/g, "").toLowerCase())
+      .filter(w => w.length > 0)
+  ));
+
+  const wordMap: Record<string, string> = {};
+
+  await Promise.allSettled(
+    words.map(async (w) => {
+      const pron = await fetchAccuratePronunciationOnline(w);
+      if (pron) wordMap[w] = pron;
+    })
+  );
+
+  const out: string[] = [];
+  for (const t of tokens) {
+    if (!t) continue;
+    if (/^\s+$/.test(t)) {
+      out.push(t);
+    } else if (t === ".") {
+      out.push("।");
+    } else if (/^[.,!?;:"'()\[\]{}—–]+$/.test(t)) {
+      out.push(t);
+    } else {
+      const clean = t.replace(/[^a-zA-Z]/g, "").toLowerCase();
+      if (clean && wordMap[clean]) {
+        out.push(wordMap[clean]);
+      } else {
+        out.push(transliterateWordToBengali(t));
+      }
+    }
+  }
+
+  return out.join("").trim();
 }

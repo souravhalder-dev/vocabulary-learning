@@ -283,6 +283,41 @@ Respond ONLY with valid JSON, no markdown formatting or backticks:
     return await fetch_online_bengali_dictionary(clean_word, context_sentence)
 
 
+
+async def transliterate_sentence_async(sentence: str, client: httpx.AsyncClient) -> str:
+    """
+    Transliterates an entire English sentence into authentic Bengali pronunciation
+    by resolving all words via verified dictionaries and multi-source APIs.
+    """
+    clean_sent = sentence.strip()
+    if not clean_sent:
+        return ""
+    tokens = re.split(r"(\s+|[.,!?;:\"'()\[\]{}—–])", clean_sent)
+    words = list(dict.fromkeys([re.sub(r"[^a-zA-Z]", "", t).lower() for t in tokens if re.sub(r"[^a-zA-Z]", "", t)]))
+    word_map = {}
+    for w in words:
+        pron, _ = await fetch_accurate_word_pronunciation(w, client)
+        if pron:
+            word_map[w] = pron
+    out = []
+    for t in tokens:
+        if not t:
+            continue
+        if re.match(r"^\s+$", t):
+            out.append(t)
+        elif t == ".":
+            out.append("।")
+        elif re.match(r"^[.,!?;:\"'()\[\]{}—–]+$", t):
+            out.append(t)
+        else:
+            clean = re.sub(r"[^a-zA-Z]", "", t).lower()
+            if clean and clean in word_map:
+                out.append(word_map[clean])
+            else:
+                out.append(transliterate_word_to_bengali(t))
+    return "".join(out).strip()
+
+
 async def translate_text(text: str, context: Optional[str] = None) -> Dict[str, str]:
     """
     Translates English sentence/text into natural Bengali and produces its Bengali phonetic pronunciation.
@@ -320,12 +355,13 @@ Return JSON ONLY:
         except Exception as e:
             print(f"AI Translation notice: {e}, falling back to translation API")
 
-    # High quality instant translation API
+    # High quality instant translation API with multi-source verified pronunciation
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with httpx.AsyncClient(timeout=6.0) as client:
             encoded = urllib.parse.quote(clean_text)
             url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&q={encoded}"
             r = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+            bengali_pron = await transliterate_sentence_async(clean_text, client)
             if r.status_code == 200:
                 data = r.json()
                 translated = "".join(segment[0] for segment in data[0] if segment and segment[0])
@@ -333,7 +369,7 @@ Return JSON ONLY:
                     return {
                         "source_text": clean_text,
                         "bengali_translation": translated.strip(),
-                        "bengali_pronunciation": transliterate_sentence_to_bengali(clean_text)
+                        "bengali_pronunciation": bengali_pron
                     }
     except Exception as e:
         print(f"Online sentence translation notice: {e}")

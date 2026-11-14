@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { transliterateSentenceToBengali } from '@/lib/phonetics';
+import { transliterateSentenceToBengaliAsync } from '@/lib/phonetics';
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
       bengaliTranslation = `"${text}" - বাক্যটির ভাবানুবাদ।`;
     }
 
-    // 2. High-accuracy Bengali phonetic pronunciation of the English sentence
-    const bengaliPronunciation = transliterateSentenceToBengali(text);
+    // 2. High-accuracy multi-source Bengali phonetic pronunciation of the English sentence
+    const bengaliPronunciation = await transliterateSentenceToBengaliAsync(text);
 
     return NextResponse.json({
       source_text: text,
