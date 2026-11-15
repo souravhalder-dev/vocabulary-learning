@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { lookupWordDualAccentPronunciation } from '@/lib/phonetics-engine';
+import { prisma } from '@/lib/prisma';
 
 async function fetchBengaliMeaning(word: string) {
   try {
@@ -52,7 +53,6 @@ async function enrichRelationList(words: string[]) {
         }
       } catch {}
 
-      // Fast synchronous rule + verified dict for relations so request never exceeds Vercel limits
       const { transliterateWordToBengali } = await import('@/lib/phonetics');
       const pron = transliterateWordToBengali(w);
       return {
@@ -71,6 +71,30 @@ export async function POST(req: NextRequest) {
     const cleanWord = rawWord.replace(/[^a-zA-Z]/g, '').trim().toLowerCase();
     if (!cleanWord) {
       return NextResponse.json({ detail: 'Invalid word' }, { status: 400 });
+    }
+
+    // Check if already in Neon PostgreSQL database
+    const existing = await prisma.vocabulary.findFirst({
+      where: { word: cleanWord },
+    });
+
+    if (existing) {
+      let synonyms = [];
+      let antonyms = [];
+      let pronunciation_uk = undefined;
+      let pronunciation_us = undefined;
+      try { if (existing.synonyms_json) synonyms = JSON.parse(existing.synonyms_json); } catch {}
+      try { if (existing.antonyms_json) antonyms = JSON.parse(existing.antonyms_json); } catch {}
+      try { if (existing.pronunciation_uk) pronunciation_uk = JSON.parse(existing.pronunciation_uk); } catch {}
+      try { if (existing.pronunciation_us) pronunciation_us = JSON.parse(existing.pronunciation_us); } catch {}
+
+      return NextResponse.json({
+        ...existing,
+        synonyms,
+        antonyms,
+        pronunciation_uk,
+        pronunciation_us,
+      });
     }
 
     let englishDefinition = `Contextual usage and definition of '${cleanWord}'.`;
@@ -133,7 +157,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Default to British English (UK) as required by specification
+    // Default to British English (UK)
     const defaultBengaliPron = dualPron?.uk.bengali_pronunciation || 'উচ্চারণ পাওয়া যায়নি';
     const defaultIpa = ukIpa || usIpa || '';
     const defaultAudio = ukAudio || usAudio || '';
@@ -143,47 +167,55 @@ export async function POST(req: NextRequest) {
       enrichRelationList(rawAntonyms)
     ]);
 
+    const pronUk = {
+      ipa: ukIpa,
+      bengali_pronunciation: dualPron?.uk.bengali_pronunciation || defaultBengaliPron,
+      audio_url: ukAudio || undefined,
+      source: dualPron?.uk.source || 'unavailable',
+    };
+
+    const pronUs = {
+      ipa: usIpa,
+      bengali_pronunciation: dualPron?.us.bengali_pronunciation || defaultBengaliPron,
+      audio_url: usAudio || undefined,
+      source: dualPron?.us.source || 'unavailable',
+    };
+
+    // Save to PostgreSQL via Prisma
+    const saved = await prisma.vocabulary.create({
+      data: {
+        word: cleanWord,
+        original_word: rawWord,
+        bengali_pronunciation: defaultBengaliPron,
+        bengali_meaning: bengaliMeaning,
+        english_definition: englishDefinition,
+        ipa_phonetic: defaultIpa,
+        audio_url: defaultAudio,
+        active_accent: 'uk',
+        pronunciation_uk: JSON.stringify(pronUk),
+        pronunciation_us: JSON.stringify(pronUs),
+        part_of_speech: pos,
+        example_sentence: exampleSentence,
+        context_sentence: body.context_sentence || null,
+        document_id: body.document_id ? Number(body.document_id) : null,
+        document_title: body.document_title || null,
+        synonyms_json: JSON.stringify(synonyms),
+        antonyms_json: JSON.stringify(antonyms),
+        is_learned: false,
+        review_count: 0,
+        leitner_box: 1,
+      },
+    });
+
     return NextResponse.json({
-      id: Date.now(),
-      word: cleanWord,
-      original_word: rawWord,
-      // Default (British English) properties for backwards compatibility
-      bengali_pronunciation: defaultBengaliPron,
-      bengali_meaning: bengaliMeaning,
-      english_definition: englishDefinition,
-      ipa_phonetic: defaultIpa,
-      audio_url: defaultAudio,
-
-      // Dual Accent configuration
-      active_accent: 'uk',
-      pronunciation_uk: {
-        ipa: ukIpa,
-        bengali_pronunciation: dualPron?.uk.bengali_pronunciation || defaultBengaliPron,
-        audio_url: ukAudio || undefined,
-        source: dualPron?.uk.source || 'unavailable',
-      },
-      pronunciation_us: {
-        ipa: usIpa,
-        bengali_pronunciation: dualPron?.us.bengali_pronunciation || defaultBengaliPron,
-        audio_url: usAudio || undefined,
-        source: dualPron?.us.source || 'unavailable',
-      },
-
-      part_of_speech: pos,
-      example_sentence: exampleSentence,
-      bengali_example: '',
-      context_sentence: body.context_sentence || null,
-      document_id: body.document_id || null,
-      document_title: body.document_title || null,
-      is_learned: false,
-      review_count: 0,
-      leitner_box: 1,
-      next_review_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
+      ...saved,
       synonyms,
-      antonyms
+      antonyms,
+      pronunciation_uk: pronUk,
+      pronunciation_us: pronUs,
     });
   } catch (error: any) {
+    console.error('Error during vocabulary lookup and save:', error);
     return NextResponse.json({ detail: error.message || 'Lookup failed' }, { status: 500 });
   }
 }

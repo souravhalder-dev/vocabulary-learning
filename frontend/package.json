@@ -4,14 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "npx tsx test/pronunciation.test.ts"
+    "test": "npx tsx test/pronunciation.test.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@langchain/core": "^1.4.1",
     "@langchain/openai": "^1.8.4",
+    "@prisma/client": "^6.4.1",
     "@types/canvas-confetti": "^1.9.0",
     "canvas-confetti": "^1.9.4",
     "cheerio": "^1.2.0",
@@ -31,6 +33,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "prisma": "^6.4.1",
     "tailwindcss": "4.3.3",
     "typescript": "^5"
   }

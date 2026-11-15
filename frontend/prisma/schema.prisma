@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Document {
+  id               Int          @id @default(autoincrement())
+  title            String
+  source_type      String       @default("text") // 'pdf' | 'url' | 'image' | 'text'
+  source_url       String?
+  file_path        String?
+  content          String       @db.Text
+  html_content     String?      @db.Text
+  pages_json       String?      @db.Text
+  total_words      Int          @default(0)
+  current_page     Int          @default(1)
+  total_pages      Int          @default(1)
+  reading_progress Float        @default(0)
+  last_read_at     DateTime     @default(now())
+  created_at       DateTime     @default(now())
+  vocabularies     Vocabulary[]
+
+  @@map("documents")
+}
+
+model Vocabulary {
+  id                    Int       @id @default(autoincrement())
+  word                  String
+  original_word         String
+  bengali_pronunciation String
+  bengali_meaning       String
+  english_definition    String?
+  ipa_phonetic          String?
+  audio_url             String?
+  active_accent         String?   @default("uk")
+  pronunciation_uk      String?   @db.Text
+  pronunciation_us      String?   @db.Text
+  part_of_speech        String?
+  example_sentence      String?   @db.Text
+  bengali_example       String?   @db.Text
+  context_sentence      String?   @db.Text
+  document_id           Int?
+  document_title        String?
+  synonyms_json         String?   @db.Text
+  antonyms_json         String?   @db.Text
+  is_learned            Boolean   @default(false)
+  review_count          Int       @default(0)
+  leitner_box           Int       @default(1)
+  next_review_at        DateTime?
+  notes                 String?   @db.Text
+  created_at            DateTime  @default(now())
+
+  document Document? @relation(fields: [document_id], references: [id], onDelete: SetNull)
+
+  @@index([word])
+  @@index([is_learned])
+  @@map("vocabularies")
+}
+
+model Translation {
+  id                    Int      @id @default(autoincrement())
+  source_text           String   @db.Text
+  bengali_translation   String   @db.Text
+  bengali_pronunciation String?  @db.Text
+  context               String?  @db.Text
+  created_at            DateTime @default(now())
+
+  @@map("translations")
+}
+
+model PersonalGrammarNote {
+  id         Int      @id @default(autoincrement())
+  rule_id    String   @unique
+  content    String   @db.Text
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("personal_grammar_notes")
+}

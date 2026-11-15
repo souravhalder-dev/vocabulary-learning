@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { transliterateSentenceToBengaliAsync } from '@/lib/phonetics';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,11 +37,17 @@ export async function POST(req: NextRequest) {
     // 2. High-accuracy multi-source Bengali phonetic pronunciation of the English sentence
     const bengaliPronunciation = await transliterateSentenceToBengaliAsync(text);
 
-    return NextResponse.json({
-      source_text: text,
-      bengali_translation: bengaliTranslation,
-      bengali_pronunciation: bengaliPronunciation,
+    // Save to PostgreSQL via Prisma
+    const saved = await prisma.translation.create({
+      data: {
+        source_text: text,
+        bengali_translation: bengaliTranslation,
+        bengali_pronunciation: bengaliPronunciation,
+        context: body.context || null,
+      },
     });
+
+    return NextResponse.json(saved);
   } catch (error: any) {
     return NextResponse.json({ detail: error.message || 'Translation failed' }, { status: 500 });
   }

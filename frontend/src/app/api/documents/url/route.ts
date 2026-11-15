@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   try {
@@ -108,20 +109,21 @@ export async function POST(req: NextRequest) {
     const content = paragraphs.join('\n\n');
     const totalWords = (content.match(/\b\w+\b/g) || []).length;
 
-    return NextResponse.json({
-      id: Date.now(),
-      title,
-      source_type: 'url',
-      source_url: url,
-      content,
-      html_content: cleanedHtmlParts.join(''),
-      total_words: totalWords,
-      total_pages: 1,
-      current_page: 1,
-      reading_progress: 0,
-      created_at: new Date().toISOString(),
-      last_read_at: new Date().toISOString(),
+    const document = await prisma.document.create({
+      data: {
+        title,
+        source_type: 'url',
+        source_url: url,
+        content,
+        html_content: cleanedHtmlParts.join(''),
+        total_words: totalWords,
+        total_pages: 1,
+        current_page: 1,
+        reading_progress: 0,
+      },
     });
+
+    return NextResponse.json(document);
   } catch (error: any) {
     return NextResponse.json({ detail: error.message || 'Article extraction failed' }, { status: 500 });
   }

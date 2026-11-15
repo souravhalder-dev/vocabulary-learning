@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,20 +14,22 @@ export async function POST(req: NextRequest) {
     const totalWords = (content.match(/\b\w+\b/g) || []).length;
     const paragraphs = content.split(/\n\s*\n/).map((p: string) => `<p>${p.trim()}</p>`).join('');
 
-    return NextResponse.json({
-      id: Date.now(),
-      title,
-      source_type: 'text',
-      content,
-      html_content: paragraphs,
-      total_words: totalWords,
-      total_pages: 1,
-      current_page: 1,
-      reading_progress: 0,
-      created_at: new Date().toISOString(),
-      last_read_at: new Date().toISOString(),
+    const document = await prisma.document.create({
+      data: {
+        title,
+        source_type: 'text',
+        content,
+        html_content: paragraphs,
+        total_words: totalWords,
+        total_pages: 1,
+        current_page: 1,
+        reading_progress: 0,
+      },
     });
+
+    return NextResponse.json(document);
   } catch (error: any) {
+    console.error('Error creating text document:', error);
     return NextResponse.json({ detail: error.message || 'Text creation failed' }, { status: 500 });
   }
 }
