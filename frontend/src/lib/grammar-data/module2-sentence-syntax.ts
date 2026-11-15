@@ -27,6 +27,44 @@ export const MODULE_2_CHAPTERS: GrammarChapter[] = [
         explanationBn: 'Lest একটি কনজাংশন যার অর্থ "পাছে ভয় হয় যে" বা "যাতে এমনটি না ঘটে"। বাক্যে Lest থাকলে পরবর্তী ক্লজের Subject এর পর সর্বদা "should" (বা কদাচিৎ "might") বসে এবং Verb এর Base form (V1) হয়। Lest এর ভেতরেই "না" সূচক ভাব থাকায় ওই ক্লজে কোনোভাবেই not বা no বসবে না।',
         whyAndWhen: '৪৬তম এবং ৪৫তম বিসিএসে ব্যাক-টু-ব্যাক এই প্রশ্নটি এসেছে ("He ran fast lest he ____ miss the train" এবং "Walk fast lest you ____ miss the bus")।',
         formula: 'Lest + Subject + SHOULD / MIGHT + Verb(Base Form) [NOT ব্যবহার নিষিদ্ধ]',
+        visualDiagram: {
+          title: 'Lest Clause Construction Pipeline (লেস্ট বাক্যের চেইন ডায়াগ্রাম)',
+          type: 'decision_tree',
+          steps: [
+            { step: 'Step 1', condition: 'বাক্যে সংযোগকারী শব্দ "Lest" দেখা গেছে?', resultBn: 'পরবর্তী ক্লজে যান', color: 'indigo' },
+            { step: 'Step 2: Subject', condition: 'Lest এর ঠিক পরেই Subject বসবে', resultBn: 'e.g., he / you / they', color: 'amber' },
+            { step: 'Step 3: Modal', condition: 'মডেল হিসেবে সর্বদা SHOULD বসবে', resultBn: 'can / could / will / would নিষিদ্ধ', color: 'rose' },
+            { step: 'Step 4: Verb', condition: 'মূল Verb এর Base Form (V1) বসবে', resultBn: 'miss, fail, lose ইত্যাদি', color: 'emerald' },
+            { step: 'Step 5: Alert', condition: 'কোনোভাবেই "NOT" বা "NO" যুক্ত করবেন না', resultBn: 'কারণ Lest নিজেই নঞর্থক', color: 'violet' }
+          ]
+        },
+        colorCodedSentence: [
+          { token: 'Walk', role: 'verb', note: 'Imperative Verb (হাঁটো)' },
+          { token: 'fast', role: 'modifier', note: 'Adverb of Manner (দ্রুত)' },
+          { token: 'lest', role: 'connector', note: 'Subordinating Conjunction (পাছে ভয় হয় যে)' },
+          { token: 'you', role: 'subject', note: 'Subject Pronoun (তুমি)' },
+          { token: 'should', role: 'verb', note: 'Modal Auxiliary (নিয়ম অনুযায়ী বাধ্যতামূলক)' },
+          { token: 'miss', role: 'verb', note: 'Main Verb Base Form (হারিয়ে ফেলো)' },
+          { token: 'the bus', role: 'object', note: 'Object Noun Phrase' }
+        ],
+        fillInTheBlanks: [
+          {
+            id: 'fib-5-1',
+            sentence: 'Walk fast lest you [____] miss the bus.',
+            answer: 'should',
+            hintBn: 'Lest এর নিয়মে কোন মডেল বসে?',
+            explanationBn: 'Lest এর সাথে সর্বদা "should" বসে।'
+          }
+        ],
+        errorCorrections: [
+          {
+            id: 'ec-5-1',
+            incorrect: 'Run fast lest you should not miss the train.',
+            errorSegment: 'should not miss',
+            correct: 'Run fast lest you should miss the train.',
+            reasonBn: 'Lest বাক্যে কখনোই "not" বসে না, কারণ Lest শব্দের ভেতরেই "না" সূচক অর্থ বিদ্যমান।'
+          }
+        ],
         examples: [
           { english: 'Walk fast lest you should miss the bus.', bengali: 'দ্রুত হাঁটো পাছে তুমি বাস মিস না করো।', note: "৪৫তম বিসিএসের প্রশ্ন। Lest এর পর 'should miss' বসেছে।" },
           { english: 'He ran fast lest he should miss the train.', bengali: 'সে দ্রুত দৌড়াল পাছে ট্রেনটি হারিয়ে ফেলে।', note: "৪৬তম বিসিএসের প্রশ্ন। should এর পর verb এর base form।" },

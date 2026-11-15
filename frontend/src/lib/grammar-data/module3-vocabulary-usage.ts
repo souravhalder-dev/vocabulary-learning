@@ -27,6 +27,39 @@ export const MODULE_3_CHAPTERS: GrammarChapter[] = [
         explanationBn: 'কোনো উপাদান দিয়ে কোনো কিছু তৈরি হওয়ার পর যদি মূল উপাদানটি চোখে দেখা যায় বা তার বাহ্যিক রূপ চেনা যায় (Physical Change), তবে "Made of" বসে। আর যদি তৈরি করার পর মূল উপাদানটি সম্পূর্ণ পরিবর্তিত হয়ে অদৃশ্য হয়ে যায় (Chemical Change), তবে "Made from" বসে।',
         whyAndWhen: '৩৮তম বিসিএসে "Paper is made from wood" প্রশ্নটি এসেছে। এটি অত্যন্ত জনপ্রিয় একটি কনসেপ্ট।',
         formula: 'মূল উপাদান দেখা গেলে ➔ MADE OF | মূল উপাদান সম্পূর্ণ বিলীন হয়ে গেলে ➔ MADE FROM',
+        visualDiagram: {
+          title: 'Made of vs Made from Transformation Flowchart',
+          type: 'decision_tree',
+          steps: [
+            { step: 'Step 1: Inspect Output', condition: 'তৈরি করা চূড়ান্ত বস্তুটি কী?', resultBn: 'চেয়ার নাকি কাগজ/মাখন?', color: 'indigo' },
+            { step: 'Step 2: Physical Visibility', condition: 'মূল উপাদান কি চোখে দেখা যায় ও চেনা যায়?', resultBn: 'হ্যাঁ ➔ MADE OF (e.g. Chair made of wood)', color: 'emerald' },
+            { step: 'Step 3: Chemical Change', condition: 'মূল উপাদান কি রাসায়নিকভাবে পরিবর্তিত ও অদৃশ্য?', resultBn: 'হ্যাঁ ➔ MADE FROM (e.g. Paper made from wood)', color: 'rose' }
+          ]
+        },
+        colorCodedSentence: [
+          { token: 'Paper', role: 'subject', note: 'Subject Noun (কাগজ)' },
+          { token: 'is made', role: 'verb', note: 'Passive Verb (তৈরি হয়)' },
+          { token: 'from', role: 'preposition', note: 'Preposition of Chemical Origin (রাসায়নিক রূপান্তর)' },
+          { token: 'wood', role: 'object', note: 'Material Noun (কাঠ)' }
+        ],
+        fillInTheBlanks: [
+          {
+            id: 'fib-8-1',
+            sentence: 'Paper is made [____] wood.',
+            answer: 'from',
+            hintBn: 'রাসায়নিক রূপান্তর বোঝাতে কোন প্রিপজিশন বসে?',
+            explanationBn: 'কাঠ থেকে কাগজ তৈরির সময় কাঠের রূপ সম্পূর্ণ পরিবর্তিত হয়ে যায়, তাই made from হবে।'
+          }
+        ],
+        errorCorrections: [
+          {
+            id: 'ec-8-1',
+            incorrect: 'Paper is made of wood.',
+            errorSegment: 'made of',
+            correct: 'Paper is made from wood.',
+            reasonBn: 'কাগজে কাঠের বাহ্যিক রূপ দৃশ্যমান নয়, তাই made of ভুল এবং made from সঠিক।'
+          }
+        ],
         examples: [
           { english: 'Paper is made from wood.', bengali: 'কাঠ থেকে কাগজ তৈরি হয়।', note: "৩৮তম বিসিএসের প্রশ্ন। কাগজে কিন্তু কাঠের আঁশ বা অস্তিত্ব সরাসরি দেখা যায় না, রাসায়নিক পরিবর্তন হয়েছে। তাই 'made from'।" },
           { english: 'This chair is made of wood.', bengali: 'এই চেয়ারটি কাঠ দিয়ে তৈরি।', note: "চেয়ারটির দিকে তাকালেই কাঠ স্পষ্ট দেখা যায় (Physical change), তাই 'made of'।" },

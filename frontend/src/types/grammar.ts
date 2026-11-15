@@ -26,6 +26,41 @@ export interface GrammarQuizQuestion {
   ruleIdRef?: string;
 }
 
+export interface VisualStep {
+  step: string;
+  condition: string;
+  resultBn: string;
+  color: 'indigo' | 'emerald' | 'amber' | 'rose' | 'violet';
+}
+
+export interface VisualDiagram {
+  title: string;
+  type: 'flowchart' | 'decision_tree' | 'timeline';
+  steps: VisualStep[];
+}
+
+export interface ColorCodedToken {
+  token: string;
+  role: 'subject' | 'verb' | 'object' | 'modifier' | 'connector' | 'preposition';
+  note: string;
+}
+
+export interface FillInTheBlank {
+  id: string;
+  sentence: string; // e.g. "He ran fast lest he [___] miss the train."
+  answer: string;
+  hintBn: string;
+  explanationBn: string;
+}
+
+export interface ErrorCorrectionItem {
+  id: string;
+  incorrect: string;
+  errorSegment: string;
+  correct: string;
+  reasonBn: string;
+}
+
 export interface GrammarRule {
   id: string;
   ruleNumber: number;
@@ -34,6 +69,8 @@ export interface GrammarRule {
   explanationBn: string;
   whyAndWhen: string;
   formula: string;
+  visualDiagram?: VisualDiagram;
+  colorCodedSentence?: ColorCodedToken[];
   examples: GrammarExample[];
   correctVsIncorrect: CorrectVsIncorrect[];
   commonMistakes: string[];
@@ -41,6 +78,8 @@ export interface GrammarRule {
   examTricks: string[];
   confusingRelatedRules: string[];
   practiceMcqs: GrammarQuizQuestion[];
+  fillInTheBlanks?: FillInTheBlank[];
+  errorCorrections?: ErrorCorrectionItem[];
 }
 
 export interface OptionAnalysis {
@@ -90,5 +129,6 @@ export interface UserGrammarProgress {
   completedChapters: string[]; // chapter ids
   bookmarkedRules: string[]; // rule ids
   savedQuestions: string[]; // question ids
+  personalNotes: Record<string, string>; // ruleId -> student's custom notes
   quizScores: Record<string, { total: number; score: number; date: string }>;
 }

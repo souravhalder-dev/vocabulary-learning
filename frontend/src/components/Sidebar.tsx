@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   UploadCloud,
-  GraduationCap
+  GraduationCap,
+  Bot
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -32,7 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'english-language', label: 'English Language', icon: GraduationCap, badge: 'BCS' },
+    { id: 'ai-grammar', label: 'AI Grammar', icon: Bot, badge: 'AI Textbook' },
     { id: 'library', label: 'My Library', icon: Library },
     { id: 'reader', label: 'Reading Room', icon: BookOpenText },
     { id: 'notebook', label: 'Vocabulary Notebook', icon: BookmarkCheck, badge: vocabCount },
@@ -60,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeTab === item.id;
+              const isActive = activeTab === item.id || (item.id === 'ai-grammar' && activeTab === 'english-language');
               return (
                 <button
                   key={item.id}
@@ -106,13 +107,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-slate-200/90 bg-white/95 px-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 shadow-lg">
         {[
           { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-          { id: 'english-language', label: 'Grammar', icon: GraduationCap },
+          { id: 'ai-grammar', label: 'AI Grammar', icon: Bot },
           { id: 'reader', label: 'Reader', icon: BookOpenText },
           { id: 'notebook', label: 'Notebook', icon: BookmarkCheck, badge: vocabCount },
           { id: 'translator', label: 'Translate', icon: Languages },
         ].map((item) => {
           const Icon = item.icon;
-          const isActive = activeTab === item.id;
+          const isActive = activeTab === item.id || (item.id === 'ai-grammar' && activeTab === 'english-language');
           return (
             <button
               key={item.id}

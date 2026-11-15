@@ -27,7 +27,13 @@ import {
   Layers,
   Clock,
   Compass,
-  FileText
+  FileText,
+  MessageSquare,
+  Edit3,
+  Save,
+  Zap,
+  Target,
+  ArrowDown
 } from 'lucide-react';
 import {
   ALL_GRAMMAR_CHAPTERS,
@@ -39,38 +45,50 @@ import {
   GrammarRule,
   BcsQuestionAnalysis,
   GrammarQuizQuestion,
-  UserGrammarProgress
+  UserGrammarProgress,
+  ColorCodedToken,
+  VisualStep
 } from '../../types/grammar';
 
-const STORAGE_KEY = 'shobdoshadhon_grammar_progress_v1';
+const STORAGE_KEY = 'shobdoshadhon_ai_grammar_progress_v2';
 
 export const EnglishLanguageView: React.FC = () => {
   // Navigation & View State
   const [selectedChapterId, setSelectedChapterId] = useState<string>('chapter-1');
-  const [activeTab, setActiveTab] = useState<'textbook' | 'bcs_analysis' | 'quiz' | 'bookmarks' | 'tutor'>('textbook');
+  const [activeTab, setActiveTab] = useState<'textbook' | 'bcs_analysis' | 'practice' | 'bookmarks_notes' | 'revision' | 'tutor'>('textbook');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [bcsFilterExam, setBcsFilterExam] = useState<string>('All');
+  const [practiceType, setPracticeType] = useState<'mcq' | 'fill_in_blank' | 'error_correction'>('mcq');
   const [quizDifficulty, setQuizDifficulty] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
 
-  // User Learning Progress State
+  // User Learning Progress State (completed rules, chapters, bookmarks, notes)
   const [progress, setProgress] = useState<UserGrammarProgress>({
     completedRules: [],
     completedChapters: [],
     bookmarkedRules: [],
     savedQuestions: [],
+    personalNotes: {},
     quizScores: {}
   });
+
+  // Note Editing State
+  const [activeNoteRuleId, setActiveNoteRuleId] = useState<string | null>(null);
+  const [currentNoteText, setCurrentNoteText] = useState<string>('');
 
   // Quiz Interaction State
   const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
   const [showQuizResults, setShowQuizResults] = useState<boolean>(false);
+
+  // Fill in the blanks state
+  const [fibAnswers, setFibAnswers] = useState<Record<string, string>>({});
+  const [fibChecked, setFibChecked] = useState<Record<string, boolean>>({});
 
   // AI Tutor State
   const [tutorQuery, setTutorQuery] = useState<string>('');
   const [tutorMessages, setTutorMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string }>>([
     {
       sender: 'ai',
-      text: 'নমস্কার! আমি আপনার বিসিএস ও প্রতিযোগিতামূলক ইংরেজি ব্যাকরণ গৃহশিক্ষক (AI Grammar Tutor)।\n\nআপনি ইংরেজি ব্যাকরণের যেকোনো নিয়ম, বিগত বছরের বিসিএস প্রশ্ন, কিংবা বিভ্রান্তিকর ব্যতিক্রম সম্পর্কে বাংলায় প্রশ্ন করতে পারেন। আমি সহজ বাংলায় উদাহরণসহ বুঝিয়ে দেব।'
+      text: 'নমস্কার! আমি আপনার AI Grammar Tutor (ব্যক্তিগত ইংরেজি ব্যাকরণ গৃহশিক্ষক)।\n\nআপনি ইংরেজি ব্যাকরণের যেকোনো নিয়ম, বিগত বছরের বিসিএস প্রশ্ন, কিংবা বিভ্রান্তিকর ব্যতিক্রম সম্পর্কে বাংলায় প্রশ্ন করতে পারেন। আমি সহজ বাংলায় উদাহরণসহ বুঝিয়ে দেব।'
     }
   ]);
   const [isTutorLoading, setIsTutorLoading] = useState<boolean>(false);
@@ -80,7 +98,11 @@ export const EnglishLanguageView: React.FC = () => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        setProgress(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        setProgress({
+          ...parsed,
+          personalNotes: parsed.personalNotes || {}
+        });
       }
     } catch (err) {
       console.warn('Failed to load grammar progress:', err);
@@ -118,7 +140,6 @@ export const EnglishLanguageView: React.FC = () => {
       ? progress.completedRules.filter((id) => id !== ruleId)
       : [...progress.completedRules, ruleId];
 
-    // Check if whole chapter is completed
     const chapterRuleIds = currentChapter.rules.map((r) => r.id);
     const isChapterDone = chapterRuleIds.every((id) => newCompleted.includes(id));
     const newCompletedChapters = isChapterDone
@@ -139,6 +160,19 @@ export const EnglishLanguageView: React.FC = () => {
       ? progress.bookmarkedRules.filter((id) => id !== ruleId)
       : [...progress.bookmarkedRules, ruleId];
     saveProgress({ ...progress, bookmarkedRules: newBookmarks });
+  };
+
+  // Save Personal Note for a rule
+  const handleSaveNote = (ruleId: string) => {
+    const updatedNotes = {
+      ...progress.personalNotes,
+      [ruleId]: currentNoteText.trim()
+    };
+    if (!currentNoteText.trim()) {
+      delete updatedNotes[ruleId];
+    }
+    saveProgress({ ...progress, personalNotes: updatedNotes });
+    setActiveNoteRuleId(null);
   };
 
   // Search Results
@@ -180,7 +214,7 @@ export const EnglishLanguageView: React.FC = () => {
   };
 
   // AI Tutor Ask Function
-  const handleAskTutor = async (questionText?: string) => {
+  const handleAskTutor = async (questionText?: string, contextRule?: GrammarRule) => {
     const q = questionText || tutorQuery;
     if (!q.trim() || isTutorLoading) return;
 
@@ -195,6 +229,7 @@ export const EnglishLanguageView: React.FC = () => {
         body: JSON.stringify({
           query: q,
           chapterId: currentChapter.id,
+          ruleId: contextRule ? contextRule.id : undefined
         })
       });
 
@@ -217,6 +252,33 @@ export const EnglishLanguageView: React.FC = () => {
     }
   };
 
+  // Ask AI about specific rule from textbook
+  const handleDirectRuleAsk = (rule: GrammarRule) => {
+    setActiveTab('tutor');
+    const prompt = `Rule ${rule.ruleNumber}: "${rule.title} (${rule.bengaliTitle})" নিয়ে আমাকে সহজ বাংলায় কিছু বাস্তব উদাহরণ, কমন ভুল এবং বিসিএস পরীক্ষার টেকনিক বুঝিয়ে বলুন।`;
+    handleAskTutor(prompt, rule);
+  };
+
+  // Color-coded token styling
+  const getTokenRoleStyle = (role: ColorCodedToken['role']) => {
+    switch (role) {
+      case 'subject':
+        return 'bg-blue-100 text-blue-900 border-blue-300 dark:bg-blue-950/80 dark:text-blue-200 dark:border-blue-800';
+      case 'verb':
+        return 'bg-purple-100 text-purple-900 border-purple-300 dark:bg-purple-950/80 dark:text-purple-200 dark:border-purple-800';
+      case 'object':
+        return 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-800';
+      case 'modifier':
+        return 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-800';
+      case 'connector':
+        return 'bg-rose-100 text-rose-900 border-rose-300 dark:bg-rose-950/80 dark:text-rose-200 dark:border-rose-800';
+      case 'preposition':
+        return 'bg-cyan-100 text-cyan-900 border-cyan-300 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-800';
+      default:
+        return 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200';
+    }
+  };
+
   // Chapter Navigation (Previous / Next)
   const currentChapterIndex = ALL_GRAMMAR_CHAPTERS.findIndex((c) => c.id === currentChapter.id);
   const prevChapter = currentChapterIndex > 0 ? ALL_GRAMMAR_CHAPTERS[currentChapterIndex - 1] : null;
@@ -229,20 +291,23 @@ export const EnglishLanguageView: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           {/* Section Brand & Title */}
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/20">
-              <GraduationCap className="h-5 w-5" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-rose-500 text-white shadow-md shadow-indigo-500/20">
+              <Bot className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  English Language
+                <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                  <span>AI Grammar</span>
+                  <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
+                    Smart Textbook
+                  </span>
                 </h1>
                 <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                   BCS Special
                 </span>
               </div>
               <p className="bengali-text text-xs text-slate-500 dark:text-slate-400">
-                বিসিএস প্রিলিমিনারি ও প্রতিযোগিতামূলক পরীক্ষার পূর্ণাঙ্গ ইংরেজি ব্যাকরণ পাঠ্যবই
+                অধ্যায়ভিত্তিক ভিজ্যুয়াল গ্রামার পাঠ্যবই, বিগত ১০ বছরের বিসিএস প্রশ্ন ও সার্বক্ষণিক এআই শিক্ষক
               </p>
             </div>
           </div>
@@ -253,9 +318,9 @@ export const EnglishLanguageView: React.FC = () => {
             <div className="flex items-center gap-2 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1.5 border border-indigo-100 dark:border-indigo-900/60">
               <Flame className="h-4 w-4 text-orange-500" />
               <div className="text-left">
-                <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">সিলেবাস সম্পন্ন</div>
+                <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">সিলেবাস অগ্রগতি</div>
                 <div className="text-xs font-bold text-indigo-700 dark:text-indigo-300">
-                  {completionPercentage}% ({progress.completedRules.length}/{totalRulesCount} নিয়ম)
+                  {completionPercentage}% ({progress.completedRules.length}/{totalRulesCount} টি নিয়ম সম্পন্ন)
                 </div>
               </div>
             </div>
@@ -265,7 +330,7 @@ export const EnglishLanguageView: React.FC = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="যেকোনো নিয়ম বা শব্দ খুঁজুন..."
+                placeholder="যেকোনো নিয়ম বা টপিক খুঁজুন..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-slate-100/80 pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-hidden dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-200 dark:focus:bg-slate-900"
@@ -285,10 +350,11 @@ export const EnglishLanguageView: React.FC = () => {
         {/* Mode Navigation Tabs */}
         <div className="mt-3 flex items-center gap-1.5 overflow-x-auto pb-0.5 border-t border-slate-100 dark:border-slate-800/60 pt-2 text-xs">
           {[
-            { id: 'textbook', label: '📖 পাঠ্যবই ও নিয়মাবলী', badge: currentChapter.rules.length },
-            { id: 'bcs_analysis', label: '🎯 বিগত ১০ বছরের বিসিএস প্রশ্ন', badge: currentChapter.bcsQuestions.length },
-            { id: 'quiz', label: '📝 চ্যাপ্টার পরীক্ষা ও মক টেস্ট', badge: currentChapter.practiceQuestions.length },
-            { id: 'bookmarks', label: '🔖 সংরক্ষিত নিয়ম', badge: progress.bookmarkedRules.length },
+            { id: 'textbook', label: '📖 পাঠ্যবই ও ভিজ্যুয়াল লেসন', badge: currentChapter.rules.length },
+            { id: 'bcs_analysis', label: '🎯 ১০ বছরের বিসিএস প্রশ্ন', badge: currentChapter.bcsQuestions.length },
+            { id: 'practice', label: '📝 অনুশীলন ও পরীক্ষা', badge: currentChapter.practiceQuestions.length },
+            { id: 'bookmarks_notes', label: '🔖 বুকমার্ক ও পার্সোনাল নোটস', badge: progress.bookmarkedRules.length + Object.keys(progress.personalNotes).length },
+            { id: 'revision', label: '⚡ দ্রুত রিভিশন কার্ড' },
             { id: 'tutor', label: '🤖 AI Grammar Tutor' }
           ].map((tab) => (
             <button
@@ -319,7 +385,7 @@ export const EnglishLanguageView: React.FC = () => {
         <aside className="w-72 sm:w-80 shrink-0 border-r border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col min-h-0 overflow-hidden">
           <div className="p-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              সূচিপত্র (Chapters)
+              কোর্স লেকচার সূচি (Lectures 01-16)
             </span>
             <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
               {ALL_GRAMMAR_CHAPTERS.length} টি অধ্যায়
@@ -421,11 +487,11 @@ export const EnglishLanguageView: React.FC = () => {
               </div>
             )}
 
-            {/* ── TAB 1: Textbook Mode (The Full Book) ────────────────────────── */}
+            {/* ── TAB 1: Textbook Mode (Visual Learning & Detailed Lessons) ───── */}
             {activeTab === 'textbook' && (
               <div className="space-y-6">
                 {/* Chapter Banner */}
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 p-6 sm:p-8 text-white shadow-xl">
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 p-6 sm:p-8 text-white shadow-xl">
                   <div className="relative z-10 space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-indigo-500/30 px-2.5 py-0.5 text-xs font-bold text-indigo-300 border border-indigo-400/30">
@@ -467,6 +533,8 @@ export const EnglishLanguageView: React.FC = () => {
                   {currentChapter.rules.map((rule) => {
                     const isRuleDone = progress.completedRules.includes(rule.id);
                     const isRuleBookmarked = progress.bookmarkedRules.includes(rule.id);
+                    const savedNote = progress.personalNotes[rule.id] || '';
+                    const isEditingNote = activeNoteRuleId === rule.id;
 
                     return (
                       <div
@@ -490,8 +558,40 @@ export const EnglishLanguageView: React.FC = () => {
                             </h4>
                           </div>
 
-                          {/* Action Buttons: Bookmark & Done */}
+                          {/* Action Buttons: Note, Ask AI, Bookmark & Done */}
                           <div className="flex items-center gap-1 shrink-0">
+                            {/* Personal Note Button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (isEditingNote) {
+                                  setActiveNoteRuleId(null);
+                                } else {
+                                  setActiveNoteRuleId(rule.id);
+                                  setCurrentNoteText(savedNote);
+                                }
+                              }}
+                              className={`p-2 rounded-xl transition-colors ${
+                                savedNote
+                                  ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
+                                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'
+                              }`}
+                              title={savedNote ? 'ব্যক্তিগত নোট দেখুন/সম্পাদনা করুন' : 'ব্যক্তিগত নোট যোগ করুন'}
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </button>
+
+                            {/* Direct Ask AI Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleDirectRuleAsk(rule)}
+                              className="p-2 rounded-xl text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950 transition-colors"
+                              title="এই নিয়ম সম্পর্কে AI গৃহশিক্ষককে সরাসরি প্রশ্ন করুন"
+                            >
+                              <Bot className="h-4 w-4" />
+                            </button>
+
+                            {/* Bookmark Button */}
                             <button
                               type="button"
                               onClick={() => toggleRuleBookmark(rule.id)}
@@ -504,6 +604,8 @@ export const EnglishLanguageView: React.FC = () => {
                             >
                               <Bookmark className="h-4 w-4" />
                             </button>
+
+                            {/* Completion Checkmark */}
                             <button
                               type="button"
                               onClick={() => toggleRuleCompleted(rule.id)}
@@ -518,6 +620,41 @@ export const EnglishLanguageView: React.FC = () => {
                             </button>
                           </div>
                         </div>
+
+                        {/* Personal Note Box (If Open or Exists) */}
+                        {(isEditingNote || savedNote) && (
+                          <div className="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-900/60 space-y-2">
+                            <div className="flex items-center justify-between text-xs font-bold text-indigo-900 dark:text-indigo-200">
+                              <span className="flex items-center gap-1.5">
+                                <Edit3 className="h-3.5 w-3.5 text-indigo-600" />
+                                <span>আপনার ব্যক্তিগত পড়ার নোট (Personal Learning Note):</span>
+                              </span>
+                              {isEditingNote && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveNote(rule.id)}
+                                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-bold shadow-xs hover:bg-indigo-500"
+                                >
+                                  <Save className="h-3 w-3" />
+                                  <span>সংরক্ষণ করুন</span>
+                                </button>
+                              )}
+                            </div>
+
+                            {isEditingNote ? (
+                              <textarea
+                                value={currentNoteText}
+                                onChange={(e) => setCurrentNoteText(e.target.value)}
+                                placeholder="এই নিয়মের জন্য আপনার ব্যক্তিগত শর্টকাট বা গুরুত্বপূর্ণ তথ্য এখানে লিখে রাখুন..."
+                                className="w-full h-20 rounded-xl border border-indigo-200 bg-white p-2.5 text-xs text-slate-800 focus:outline-hidden dark:border-indigo-800 dark:bg-slate-900 dark:text-slate-200"
+                              />
+                            ) : (
+                              <p className="bengali-text text-xs text-slate-700 dark:text-slate-300 italic">
+                                "{savedNote}"
+                              </p>
+                            )}
+                          </div>
+                        )}
 
                         {/* Bengali In-Depth Explanation */}
                         <div className="space-y-2">
@@ -541,6 +678,70 @@ export const EnglishLanguageView: React.FC = () => {
                             <code className="text-xs sm:text-sm font-bold text-indigo-900 dark:text-indigo-200 font-mono select-all">
                               {rule.formula}
                             </code>
+                          </div>
+                        )}
+
+                        {/* ── VISUAL LEARNING: Flowcharts & Decision Trees ───────── */}
+                        {rule.visualDiagram && (
+                          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <div className="flex items-center gap-2 text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">
+                              <Compass className="h-4 w-4" />
+                              <span>{rule.visualDiagram.title}</span>
+                            </div>
+
+                            <div className="space-y-2">
+                              {rule.visualDiagram.steps.map((st, stIdx) => (
+                                <div key={stIdx} className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                  <div className="flex items-center gap-2 sm:w-1/3 shrink-0">
+                                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                                      {st.step}
+                                    </span>
+                                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                      {st.condition}
+                                    </span>
+                                  </div>
+                                  <div className="hidden sm:block text-slate-400">➔</div>
+                                  <div className="flex-1 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 text-xs font-bold text-indigo-950 dark:text-indigo-300 bengali-text shadow-2xs">
+                                    {st.resultBn}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ── VISUAL LEARNING: Color-Coded Sentence Breakdown ──── */}
+                        {rule.colorCodedSentence && rule.colorCodedSentence.length > 0 && (
+                          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-950 shadow-xs space-y-3">
+                            <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                              <Sparkles className="h-4 w-4 text-amber-500" />
+                              <span>কালার-কোডেড বাক্য বিশ্লেষণ (Color-Coded Structure Breakdown)</span>
+                            </div>
+
+                            {/* Token Badges Row */}
+                            <div className="flex flex-wrap items-center gap-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                              {rule.colorCodedSentence.map((tok, tIdx) => (
+                                <span
+                                  key={tIdx}
+                                  className={`px-2.5 py-1 rounded-lg border text-xs font-bold font-mono ${getTokenRoleStyle(tok.role)}`}
+                                  title={`${tok.role.toUpperCase()}: ${tok.note}`}
+                                >
+                                  {tok.token}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Token Notes Legend */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 text-xs">
+                              {rule.colorCodedSentence.map((tok, tIdx) => (
+                                <div key={tIdx} className="flex items-baseline gap-1.5 bengali-text text-[11px]">
+                                  <span className="font-bold text-indigo-700 dark:text-indigo-400 shrink-0">
+                                    "{tok.token}":
+                                  </span>
+                                  <span className="text-slate-600 dark:text-slate-400">{tok.note}</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
 
@@ -667,7 +868,7 @@ export const EnglishLanguageView: React.FC = () => {
               </div>
             )}
 
-            {/* ── TAB 2: 10-Year BCS Analysis Mode ────────────────────────────── */}
+            {/* ── TAB 2: 10-Year BCS Question Analysis ────────────────────────── */}
             {activeTab === 'bcs_analysis' && (
               <div className="space-y-6">
                 <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -794,224 +995,396 @@ export const EnglishLanguageView: React.FC = () => {
               </div>
             )}
 
-            {/* ── TAB 3: Interactive Practice & Quiz Mode ──────────────────────── */}
-            {activeTab === 'quiz' && (
+            {/* ── TAB 3: Interactive Practice & Exam Modes ────────────────────── */}
+            {activeTab === 'practice' && (
               <div className="space-y-6">
-                {/* Quiz Header & Controls */}
+                {/* Practice Sub-tab Switcher: MCQ / Fill in blanks / Error detection */}
                 <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <HelpCircle className="h-5 w-5 text-indigo-600" />
-                      <span>{currentChapter.title} - অধ্যায়ভিত্তিক মূল্যায়ন পরীক্ষা</span>
-                    </h3>
-                    <p className="bengali-text text-xs text-slate-500 dark:text-slate-400">
-                      মোট প্রশ্ন: {filteredQuizQuestions.length} টি • সঠিক উত্তরে ১ নম্বর
-                    </p>
-                  </div>
-
-                  {/* Difficulty Filters */}
-                  <div className="flex items-center gap-1.5 text-xs">
-                    {(['all', 'beginner', 'intermediate', 'advanced'] as const).map((diff) => (
-                      <button
-                        key={diff}
-                        onClick={() => {
-                          setQuizDifficulty(diff);
-                          setShowQuizResults(false);
-                          setUserAnswers({});
-                        }}
-                        className={`px-2.5 py-1 rounded-lg capitalize font-semibold transition-all ${
-                          quizDifficulty === diff
-                            ? 'bg-indigo-600 text-white shadow-xs'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400'
-                        }`}
-                      >
-                        {diff}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Score Summary Box (If Evaluated) */}
-                {showQuizResults && (
-                  <div className="p-6 rounded-3xl bg-gradient-to-r from-indigo-900 to-violet-900 text-white shadow-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5 text-indigo-600" />
                     <div>
-                      <div className="text-xs font-bold text-indigo-200 uppercase tracking-wider">আপনার প্রাপ্ত ফলাফল</div>
-                      <div className="text-2xl font-black mt-1">
-                        {calculateQuizScore().correct} / {calculateQuizScore().total}
-                      </div>
-                      <p className="bengali-text text-xs text-indigo-200 mt-1">
-                        {calculateQuizScore().correct === calculateQuizScore().total
-                          ? 'চমৎকার! আপনার প্রস্তুতি অত্যন্ত মানসম্মত।'
-                          : 'ভুল হওয়া প্রশ্নগুলোর ব্যাখ্যা মনোযোগ দিয়ে পড়ুন।'}
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                        {currentChapter.title} - অনুশীলন ও মূল্যায়ন
+                      </h3>
+                      <p className="bengali-text text-xs text-slate-500">
+                        বিভিন্ন ফরম্যাটের প্রশ্নের মাধ্যমে ব্যাকরণিক দক্ষতা যাচাই করুন
                       </p>
                     </div>
+                  </div>
 
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-semibold">
                     <button
-                      onClick={() => {
-                        setShowQuizResults(false);
-                        setUserAnswers({});
-                      }}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-indigo-900 font-bold text-xs shadow-md hover:bg-indigo-50 transition-all"
+                      onClick={() => setPracticeType('mcq')}
+                      className={`px-3 py-1.5 rounded-lg transition-all ${
+                        practiceType === 'mcq' ? 'bg-indigo-600 text-white shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400'
+                      }`}
                     >
-                      <RotateCcw className="h-3.5 w-3.5" />
-                      <span>পুনরায় পরীক্ষা দিন</span>
+                      MCQs ({filteredQuizQuestions.length})
+                    </button>
+                    <button
+                      onClick={() => setPracticeType('fill_in_blank')}
+                      className={`px-3 py-1.5 rounded-lg transition-all ${
+                        practiceType === 'fill_in_blank' ? 'bg-indigo-600 text-white shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      Fill-in-the-Blanks
+                    </button>
+                    <button
+                      onClick={() => setPracticeType('error_correction')}
+                      className={`px-3 py-1.5 rounded-lg transition-all ${
+                        practiceType === 'error_correction' ? 'bg-indigo-600 text-white shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      Error Spotting
                     </button>
                   </div>
-                )}
+                </div>
 
-                {/* Questions List */}
-                <div className="space-y-5">
-                  {filteredQuizQuestions.map((q, idx) => {
-                    const selectedOpt = userAnswers[q.id];
-                    const hasAnswered = selectedOpt !== undefined;
+                {/* Sub-mode 1: Multiple Choice Questions */}
+                {practiceType === 'mcq' && (
+                  <div className="space-y-5">
+                    {/* Score Summary Box (If Evaluated) */}
+                    {showQuizResults && (
+                      <div className="p-6 rounded-3xl bg-gradient-to-r from-indigo-900 to-violet-900 text-white shadow-xl flex items-center justify-between">
+                        <div>
+                          <div className="text-xs font-bold text-indigo-200 uppercase tracking-wider">আপনার প্রাপ্ত ফলাফল</div>
+                          <div className="text-2xl font-black mt-1">
+                            {calculateQuizScore().correct} / {calculateQuizScore().total}
+                          </div>
+                          <p className="bengali-text text-xs text-indigo-200 mt-1">
+                            {calculateQuizScore().correct === calculateQuizScore().total
+                              ? 'চমৎকার! আপনার প্রস্তুতি অত্যন্ত মানসম্মত।'
+                              : 'ভুল হওয়া প্রশ্নগুলোর ব্যাখ্যা মনোযোগ দিয়ে পড়ুন।'}
+                          </p>
+                        </div>
 
-                    return (
-                      <div
-                        key={q.id}
-                        className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-bold text-slate-400">
-                            প্রশ্ন {idx + 1}
-                          </span>
-                          {q.bcsYearTag && (
-                            <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-[10.5px] font-bold">
-                              {q.bcsYearTag}
+                        <button
+                          onClick={() => {
+                            setShowQuizResults(false);
+                            setUserAnswers({});
+                          }}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-indigo-900 font-bold text-xs shadow-md hover:bg-indigo-50 transition-all"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          <span>পুনরায় পরীক্ষা দিন</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {filteredQuizQuestions.map((q, idx) => {
+                      const selectedOpt = userAnswers[q.id];
+
+                      return (
+                        <div
+                          key={q.id}
+                          className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-slate-400">
+                              প্রশ্ন {idx + 1}
                             </span>
+                            {q.bcsYearTag && (
+                              <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-[10.5px] font-bold">
+                                {q.bcsYearTag}
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                            {q.question}
+                          </h4>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            {q.options.map((optText, optIdx) => {
+                              const isSelected = selectedOpt === optIdx;
+                              const isCorrect = q.correctIndex === optIdx;
+
+                              let optStyle = 'bg-slate-50 hover:bg-indigo-50/50 dark:bg-slate-800/40 dark:hover:bg-indigo-950/40 border-slate-200 dark:border-slate-800';
+
+                              if (showQuizResults) {
+                                if (isCorrect) {
+                                  optStyle = 'bg-emerald-100 border-emerald-400 text-emerald-900 dark:bg-emerald-950 dark:border-emerald-700 dark:text-emerald-200 font-bold';
+                                } else if (isSelected && !isCorrect) {
+                                  optStyle = 'bg-rose-100 border-rose-400 text-rose-900 dark:bg-rose-950 dark:border-rose-700 dark:text-rose-200';
+                                }
+                              } else if (isSelected) {
+                                optStyle = 'bg-indigo-100 border-indigo-400 text-indigo-900 dark:bg-indigo-950 dark:border-indigo-600 dark:text-indigo-200 font-bold';
+                              }
+
+                              return (
+                                <button
+                                  key={optIdx}
+                                  type="button"
+                                  onClick={() => handleSelectOption(q.id, optIdx)}
+                                  className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all ${optStyle}`}
+                                >
+                                  <span>{optText}</span>
+                                  {showQuizResults && isCorrect && (
+                                    <Check className="h-4 w-4 text-emerald-600" />
+                                  )}
+                                  {showQuizResults && isSelected && !isCorrect && (
+                                    <X className="h-4 w-4 text-rose-600" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {showQuizResults && (
+                            <div className="p-3.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 text-xs">
+                              <div className="font-bold text-indigo-900 dark:text-indigo-200 mb-0.5">
+                                ব্যাখ্যা (Explanation):
+                              </div>
+                              <p className="bengali-text text-slate-700 dark:text-slate-300">
+                                {q.explanationBn}
+                              </p>
+                            </div>
                           )}
                         </div>
+                      );
+                    })}
 
-                        <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                          {q.question}
-                        </h4>
-
-                        {/* Options */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                          {q.options.map((optText, optIdx) => {
-                            const isSelected = selectedOpt === optIdx;
-                            const isCorrect = q.correctIndex === optIdx;
-
-                            let optStyle = 'bg-slate-50 hover:bg-indigo-50/50 dark:bg-slate-800/40 dark:hover:bg-indigo-950/40 border-slate-200 dark:border-slate-800';
-
-                            if (showQuizResults) {
-                              if (isCorrect) {
-                                optStyle = 'bg-emerald-100 border-emerald-400 text-emerald-900 dark:bg-emerald-950 dark:border-emerald-700 dark:text-emerald-200 font-bold';
-                              } else if (isSelected && !isCorrect) {
-                                optStyle = 'bg-rose-100 border-rose-400 text-rose-900 dark:bg-rose-950 dark:border-rose-700 dark:text-rose-200';
-                              }
-                            } else if (isSelected) {
-                              optStyle = 'bg-indigo-100 border-indigo-400 text-indigo-900 dark:bg-indigo-950 dark:border-indigo-600 dark:text-indigo-200 font-bold';
-                            }
-
-                            return (
-                              <button
-                                key={optIdx}
-                                type="button"
-                                onClick={() => handleSelectOption(q.id, optIdx)}
-                                className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all ${optStyle}`}
-                              >
-                                <span>{optText}</span>
-                                {showQuizResults && isCorrect && (
-                                  <Check className="h-4 w-4 text-emerald-600" />
-                                )}
-                                {showQuizResults && isSelected && !isCorrect && (
-                                  <X className="h-4 w-4 text-rose-600" />
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {/* Explanation Box (Visible After Submission) */}
-                        {showQuizResults && (
-                          <div className="p-3.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 text-xs">
-                            <div className="font-bold text-indigo-900 dark:text-indigo-200 mb-0.5">
-                              ব্যাখ্যা (Explanation):
-                            </div>
-                            <p className="bengali-text text-slate-700 dark:text-slate-300">
-                              {q.explanationBn}
-                            </p>
-                          </div>
-                        )}
+                    {!showQuizResults && filteredQuizQuestions.length > 0 && (
+                      <div className="flex justify-center pt-4">
+                        <button
+                          onClick={() => setShowQuizResults(true)}
+                          className="px-8 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/20 transition-all active:scale-95"
+                        >
+                          উত্তরপত্র জমা দিন (Submit Test)
+                        </button>
                       </div>
-                    );
-                  })}
-                </div>
-
-                {/* Submit Quiz Button */}
-                {!showQuizResults && filteredQuizQuestions.length > 0 && (
-                  <div className="flex justify-center pt-4">
-                    <button
-                      onClick={() => setShowQuizResults(true)}
-                      className="px-8 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/20 transition-all active:scale-95"
-                    >
-                      উত্তরপত্র জমা দিন (Submit Test)
-                    </button>
+                    )}
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* ── TAB 4: Saved & Bookmarked Rules ─────────────────────────────── */}
-            {activeTab === 'bookmarks' && (
-              <div className="space-y-4">
-                <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <BookmarkCheck className="h-5 w-5 text-amber-500" />
-                    <span>সংরক্ষিত ও গুরুত্বপূর্ণ ব্যাকরণিক নিয়মাবলী</span>
-                  </h3>
-                  <p className="bengali-text text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    দ্রুত রিভিশন দেওয়ার জন্য আপনার চিহ্নিত করা মোট {progress.bookmarkedRules.length} টি নিয়ম
-                  </p>
-                </div>
+                {/* Sub-mode 2: Fill-in-the-Blanks */}
+                {practiceType === 'fill_in_blank' && (
+                  <div className="space-y-4">
+                    {currentChapter.rules.flatMap((r) => r.fillInTheBlanks || []).length === 0 ? (
+                      <div className="p-8 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-500">
+                        এই অধ্যায়ের জন্য ফিল-ইন-দ্য-ব্ল্যাংকস দ্রুত সংযোজন করা হচ্ছে। অনুগ্রহ করে এমসিকিউ মোড অনুশীলন করুন।
+                      </div>
+                    ) : (
+                      currentChapter.rules.flatMap((r) => r.fillInTheBlanks || []).map((fib) => {
+                        const userVal = fibAnswers[fib.id] || '';
+                        const isChecked = fibChecked[fib.id];
+                        const isRight = userVal.trim().toLowerCase() === fib.answer.toLowerCase();
 
-                {progress.bookmarkedRules.length === 0 ? (
-                  <div className="p-8 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-500">
-                    এখনও কোনো নিয়ম বুকমার্ক করা হয়নি। পাঠ্যবই পড়ার সময় বুকমার্ক আইকনে ক্লিক করুন।
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {ALL_GRAMMAR_CHAPTERS.flatMap((c) =>
-                      c.rules
-                        .filter((r) => progress.bookmarkedRules.includes(r.id))
-                        .map((rule) => (
+                        return (
                           <div
-                            key={rule.id}
-                            className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between gap-3"
+                            key={fib.id}
+                            className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3"
                           >
-                            <div
-                              onClick={() => {
-                                setSelectedChapterId(c.id);
-                                setActiveTab('textbook');
-                              }}
-                              className="cursor-pointer flex-1"
-                            >
-                              <div className="text-[10px] font-bold text-indigo-600 uppercase">
-                                {c.title} • Rule {rule.ruleNumber}
-                              </div>
-                              <div className="text-xs font-bold text-slate-900 dark:text-white">
-                                {rule.title} ({rule.bengaliTitle})
-                              </div>
-                              <code className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5 block">
-                                {rule.formula}
-                              </code>
+                            <div className="text-sm sm:text-base font-bold text-slate-900 dark:text-white font-serif">
+                              {fib.sentence}
                             </div>
-                            <button
-                              onClick={() => toggleRuleBookmark(rule.id)}
-                              className="p-2 text-amber-600 hover:text-slate-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-                              title="বুকমার্ক মুছুন"
-                            >
-                              <BookmarkCheck className="h-4 w-4" />
-                            </button>
+
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                placeholder="সঠিক শব্দটি লিখুন..."
+                                value={userVal}
+                                onChange={(e) => {
+                                  setFibAnswers((prev) => ({ ...prev, [fib.id]: e.target.value }));
+                                  setFibChecked((prev) => ({ ...prev, [fib.id]: false }));
+                                }}
+                                className="w-56 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 focus:outline-hidden focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-800 dark:text-white"
+                              />
+                              <button
+                                onClick={() => setFibChecked((prev) => ({ ...prev, [fib.id]: true }))}
+                                className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-xs"
+                              >
+                                যাচাই করুন
+                              </button>
+                            </div>
+
+                            {isChecked && (
+                              <div className={`p-3 rounded-xl border text-xs ${
+                                isRight
+                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200'
+                                  : 'bg-rose-50 border-rose-300 text-rose-900 dark:bg-rose-950/60 dark:text-rose-200'
+                              }`}>
+                                <div className="font-bold">
+                                  {isRight ? '🎉 সঠিক উত্তর!' : `❌ ভুল উত্তর। সঠিক উত্তর হলো: "${fib.answer}"`}
+                                </div>
+                                <div className="bengali-text text-[11px] mt-1">{fib.explanationBn}</div>
+                              </div>
+                            )}
+
+                            <div className="bengali-text text-[11px] text-slate-400">
+                              💡 ইঙ্গিত: {fib.hintBn}
+                            </div>
                           </div>
-                        ))
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+
+                {/* Sub-mode 3: Error Spotting & Correction */}
+                {practiceType === 'error_correction' && (
+                  <div className="space-y-4">
+                    {currentChapter.rules.flatMap((r) => r.errorCorrections || []).length === 0 ? (
+                      <div className="p-8 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-500">
+                        এই অধ্যায়ের জন্য এরর স্পটিং প্রশ্ন প্রস্তুত হচ্ছে।
+                      </div>
+                    ) : (
+                      currentChapter.rules.flatMap((r) => r.errorCorrections || []).map((ec) => (
+                        <div
+                          key={ec.id}
+                          className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3"
+                        >
+                          <div className="text-xs font-bold text-rose-600 uppercase">ভুল বাক্য (Spot the Error):</div>
+                          <div className="text-sm font-semibold text-rose-700 dark:text-rose-400 font-serif">
+                            "{ec.incorrect}"
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-1 text-xs">
+                            <div className="font-bold text-emerald-800 dark:text-emerald-300">
+                              ✅ সঠিক রূপ: "{ec.correct}"
+                            </div>
+                            <div className="bengali-text text-slate-600 dark:text-slate-400 text-[11px]">
+                              সংশোধনের কারণ: {ec.reasonBn}
+                            </div>
+                          </div>
+                        </div>
+                      ))
                     )}
                   </div>
                 )}
               </div>
             )}
 
-            {/* ── TAB 5: AI Grammar Tutor ─────────────────────────────────────── */}
+            {/* ── TAB 4: Bookmarks & Personal Notes ───────────────────────────── */}
+            {activeTab === 'bookmarks_notes' && (
+              <div className="space-y-4">
+                <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <BookmarkCheck className="h-5 w-5 text-amber-500" />
+                    <span>আপনার বুকমার্ক ও ব্যক্তিগত পড়ার নোটসমূহ</span>
+                  </h3>
+                  <p className="bengali-text text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    গুরুত্বপূর্ণ চিহ্নিত করা নিয়ম এবং আপনার নিজস্ব নোটগুলোর সংকলন
+                  </p>
+                </div>
+
+                {progress.bookmarkedRules.length === 0 && Object.keys(progress.personalNotes).length === 0 ? (
+                  <div className="p-8 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-500">
+                    এখনও কোনো নিয়ম বুকমার্ক বা নোট লেখা হয়নি। পাঠ্যবই পড়ার সময় বুকমার্ক ও এডিট আইকনে ক্লিক করে নিজের মতো নোট লিখুন।
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {ALL_GRAMMAR_CHAPTERS.flatMap((c) =>
+                      c.rules
+                        .filter((r) => progress.bookmarkedRules.includes(r.id) || progress.personalNotes[r.id])
+                        .map((rule) => {
+                          const note = progress.personalNotes[rule.id];
+                          const isBookmarked = progress.bookmarkedRules.includes(rule.id);
+
+                          return (
+                            <div
+                              key={rule.id}
+                              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div
+                                  onClick={() => {
+                                    setSelectedChapterId(c.id);
+                                    setActiveTab('textbook');
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <div className="text-[10px] font-bold text-indigo-600 uppercase">
+                                    {c.title} • Rule {rule.ruleNumber}
+                                  </div>
+                                  <div className="text-xs font-bold text-slate-900 dark:text-white">
+                                    {rule.title} ({rule.bengaliTitle})
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {isBookmarked && (
+                                    <button
+                                      onClick={() => toggleRuleBookmark(rule.id)}
+                                      className="p-1.5 text-amber-500 hover:text-slate-400 rounded-lg"
+                                      title="বুকমার্ক মুছুন"
+                                    >
+                                      <BookmarkCheck className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              <code className="text-[11px] text-slate-500 dark:text-slate-400 font-mono block">
+                                {rule.formula}
+                              </code>
+
+                              {note && (
+                                <div className="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900 text-xs bengali-text text-indigo-950 dark:text-indigo-200 italic">
+                                  📝 আপনার নোট: "{note}"
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── TAB 5: Quick Revision & Formula Cards ───────────────────────── */}
+            {activeTab === 'revision' && (
+              <div className="space-y-5">
+                <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
+                    <span>{currentChapter.title} - দ্রুত রিভিশন পয়েন্ট ও সূত্র</span>
+                  </h3>
+                  <p className="bengali-text text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    পরীক্ষার আগের রাতে বা শেষ মুহূর্তের দ্রুত রিভিশনের জন্য মূল পয়েন্টসমূহ
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {currentChapter.summaryRevisionNotes.map((note, nIdx) => (
+                    <div
+                      key={nIdx}
+                      className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800 shadow-xs flex items-start gap-2.5"
+                    >
+                      <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                        {nIdx + 1}
+                      </span>
+                      <p className="bengali-text text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+                        {note}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* All Chapter Formulas Rapid Review Card */}
+                <div className="p-6 rounded-3xl bg-slate-900 text-white space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-bold text-indigo-400 uppercase tracking-wider">
+                    <Target className="h-4 w-4" />
+                    <span>এই অধ্যায়ের সমস্ত ব্যাকরণিক সূত্রের দ্রুত একঝলক</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {currentChapter.rules.map((r) => (
+                      <div key={r.id} className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                        <div className="text-[11px] font-bold text-amber-400">
+                          Rule {r.ruleNumber}: {r.bengaliTitle}
+                        </div>
+                        <code className="text-xs text-indigo-200 font-mono block">
+                          {r.formula}
+                        </code>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── TAB 6: AI Grammar Tutor ─────────────────────────────────────── */}
             {activeTab === 'tutor' && (
               <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col h-[650px] overflow-hidden">
                 {/* Tutor Header */}
@@ -1022,11 +1395,11 @@ export const EnglishLanguageView: React.FC = () => {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span>AI Grammar Tutor</span>
+                        <span>AI Grammar Tutor (ব্যক্তিগত গৃহশিক্ষক)</span>
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                       </div>
                       <div className="bengali-text text-[10.5px] text-slate-500">
-                        বর্তমান অধ্যায়: {currentChapter.title}
+                        সংশ্লিষ্ট অধ্যায়: {currentChapter.title}
                       </div>
                     </div>
                   </div>
@@ -1058,7 +1431,7 @@ export const EnglishLanguageView: React.FC = () => {
                   {isTutorLoading && (
                     <div className="flex items-center gap-2 text-xs text-indigo-600 dark:text-indigo-400 p-2">
                       <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
-                      <span className="bengali-text">গৃহশিক্ষক ব্যাকরণ বিশ্লেষণ করছেন...</span>
+                      <span className="bengali-text">AI গৃহশিক্ষক ব্যাকরণ বিশ্লেষণ করছেন...</span>
                     </div>
                   )}
                 </div>
@@ -1069,7 +1442,7 @@ export const EnglishLanguageView: React.FC = () => {
                     'Lest এর পর should কেন বসে?',
                     'Gerund ও Participle চেনার সহজ উপায়',
                     'Made of বনাম Made from এর পার্থক্য',
-                    'Neither the teacher nor the students were present কেন হলো?'
+                    'আমার এই বাক্যটি শুদ্ধ কি না পরীক্ষা করুন'
                   ].map((p, pIdx) => (
                     <button
                       key={pIdx}
@@ -1091,7 +1464,7 @@ export const EnglishLanguageView: React.FC = () => {
                 >
                   <input
                     type="text"
-                    placeholder="ইংরেজি ব্যাকরণ নিয়ে যেকোনো প্রশ্ন বাংলায় লিখুন..."
+                    placeholder="ইংরেজি ব্যাকরণ নিয়ে যেকোনো প্রশ্ন বাংলায় লিখুন বা কোনো বাক্য পরীক্ষা করতে দিন..."
                     value={tutorQuery}
                     onChange={(e) => setTutorQuery(e.target.value)}
                     className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-hidden dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 dark:focus:bg-slate-900"

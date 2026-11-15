@@ -27,6 +27,41 @@ export const MODULE_1_CHAPTERS: GrammarChapter[] = [
         explanationBn: 'কোনো শব্দ একা থাকলে তার একটি নির্দিষ্ট অর্থ থাকতে পারে, কিন্তু বাক্যে ব্যবহারের ওপর ভিত্তি করেই তার আসল Part of Speech নির্ধারিত হয়। যেমন: Article/Preposition/Possessive Adjective এর পর একটি মাত্র শব্দ বসলে তা সর্বদা Noun হয়।',
         whyAndWhen: 'বিসিএস ও চাকরির পরীক্ষায় আন্ডারলাইন করা শব্দের পদ সনাক্ত করতে বলা হয়। অবস্থানগত নিয়ম জানলে শব্দের অর্থ না জেনেও শতভাগ সঠিক উত্তর দেওয়া যায়।',
         formula: 'Article / Preposition / Possessive Adjective + [Only One Word] = NOUN',
+        visualDiagram: {
+          title: 'Word Position Decision Tree (পজিশন ভিত্তিক পার্টস অব স্পিচ চেনার অ্যালগরিদম)',
+          type: 'decision_tree',
+          steps: [
+            { step: 'Step 1', condition: 'শব্দটির পূর্বে Article (a/an/the) বা Preposition আছে?', resultBn: 'হ্যাঁ থাকলে পরবর্তী শর্তে যান', color: 'indigo' },
+            { step: 'Step 2', condition: 'এরপর কি মাত্র একটি একক শব্দ বসেছে?', resultBn: '১০০% নিশ্চিত এটি NOUN (e.g., This is the go of the world)', color: 'emerald' },
+            { step: 'Step 3', condition: 'এরপর কি দুটি শব্দ রয়েছে (Word + Noun)?', resultBn: 'মাঝের শব্দটি নিশ্চিতভাবে ADJECTIVE (e.g., He is a good boy)', color: 'amber' }
+          ]
+        },
+        colorCodedSentence: [
+          { token: 'This', role: 'subject', note: 'Demonstrative Pronoun (বাক্যের কর্তা)' },
+          { token: 'is', role: 'verb', note: 'Linking Verb (হয়)' },
+          { token: 'the', role: 'modifier', note: 'Definite Article' },
+          { token: 'go', role: 'object', note: 'Noun (the এবং of এর মাঝে একমাত্র শব্দ)' },
+          { token: 'of', role: 'preposition', note: 'Preposition' },
+          { token: 'the world', role: 'object', note: 'Prepositional Object Noun' }
+        ],
+        fillInTheBlanks: [
+          {
+            id: 'fib-1-1',
+            sentence: 'This is the [____] of the world.',
+            answer: 'go',
+            hintBn: 'এখানে রীতি বা নিয়ম অর্থে Noun বসবে',
+            explanationBn: 'the এবং of এর মাঝে একটি মাত্র শব্দ বসলে তা Noun হয়। go এখানে Noun।'
+          }
+        ],
+        errorCorrections: [
+          {
+            id: 'ec-1-1',
+            incorrect: 'He went for walk in the morning.',
+            errorSegment: 'for walk',
+            correct: 'He went for a walk in the morning.',
+            reasonBn: 'walk কে Noun হিসেবে ব্যবহার করতে এর পূর্বে Article "a" আবশ্যক (went for a walk)।'
+          }
+        ],
         examples: [
           { english: 'This is the go of the world.', bengali: 'এটাই জগতের নিয়ম।', note: "'the' (article) এবং 'of' (preposition) এর মাঝে একটি মাত্র শব্দ 'go', তাই এটি Noun (অর্থ: নিয়ম/রীতি)।" },
           { english: 'He is on the committee.', bengali: 'তিনি কমিটির সদস্য।', note: "'the' এর পর 'committee' একটি মাত্র শব্দ, তাই Noun।" },
@@ -539,6 +574,42 @@ export const MODULE_1_CHAPTERS: GrammarChapter[] = [
         explanationBn: 'Verb + ing যখন একই সাথে Verb ও Noun এর কাজ করে, তখন তা Gerund। আর Verb + ing যখন একই সাথে Verb ও Adjective এর কাজ করে (অর্থাৎ অবস্থা, গতিশীলতা বা বৈশিষ্ট্য বোঝায়), তখন তা Present Participle।',
         whyAndWhen: 'বিসিএস পরীক্ষায় "A rolling stone gathers no moss" বাক্যে "rolling" কী তা জানতে চাওয়া হয়েছে। এটি সবচেয়ে বেশি জিজ্ঞাসিত প্রশ্ন।',
         formula: 'Verb + ing = Noun এর কাজ করলে GERUND | Adjective এর কাজ করলে PARTICIPLE',
+        visualDiagram: {
+          title: 'The 5-Second Gerund vs Participle Flowchart (নির্ণয়ের বৈজ্ঞানিক ছক)',
+          type: 'flowchart',
+          steps: [
+            { step: 'Step 1', condition: 'Verb + ing যুক্ত শব্দটি বাক্যে কী বোঝাচ্ছে?', resultBn: 'নিচের ২টি প্রশ্নের মাধ্যমে পরীক্ষা করুন', color: 'indigo' },
+            { step: 'Step 2: Action Test', condition: 'Noun কি স্বয়ং কাজটি চলমান অবস্থায় করছে? (Stone is rolling? / Baby is sleeping?)', resultBn: 'হ্যাঁ ➔ PARTICIPLE (Adjective / চলমান অবস্থা)', color: 'emerald' },
+            { step: 'Step 3: Purpose Test', condition: 'নাউনটি কি কাজের উদ্দেশ্য বা উপাদান? (Room for reading? / Pill for sleeping?)', resultBn: 'হ্যাঁ ➔ GERUND (Noun / কাজের উদ্দেশ্য)', color: 'amber' },
+            { step: 'Step 4: Structure Test', condition: 'শব্দটির পূর্বে "The" এবং পরে "of" আছে কি? (The reading of)', resultBn: 'নিশ্চিতভাবে VERBAL NOUN', color: 'violet' }
+          ]
+        },
+        colorCodedSentence: [
+          { token: 'A', role: 'modifier', note: 'Indefinite Article' },
+          { token: 'rolling', role: 'modifier', note: 'Present Participle (Adjective হিসেবে stone-এর অবস্থা প্রকাশ করছে)' },
+          { token: 'stone', role: 'subject', note: 'Noun (বাক্যের কর্তা)' },
+          { token: 'gathers', role: 'verb', note: 'Transitive Verb (Present Indefinite)' },
+          { token: 'no', role: 'modifier', note: 'Negative Determiner / Adjective' },
+          { token: 'moss', role: 'object', note: 'Uncountable Noun (কর্ম)' }
+        ],
+        fillInTheBlanks: [
+          {
+            id: 'fib-4-1',
+            sentence: 'He gave up [____] football.',
+            answer: 'playing',
+            hintBn: 'Preposition "up" এর পর Gerund বসে',
+            explanationBn: 'Preposition এর পরে Verb আসলে সর্বদা verb+ing (Gerund) হয়। তাই playing হবে।'
+          }
+        ],
+        errorCorrections: [
+          {
+            id: 'ec-4-1',
+            incorrect: 'She is fond of to sing songs.',
+            errorSegment: 'of to sing',
+            correct: 'She is fond of singing songs.',
+            reasonBn: 'Preposition "of" এর পরে Infinitive (to sing) নয়, Gerund (singing) বসবে।'
+          }
+        ],
         examples: [
           { english: 'A rolling stone gathers no moss.', bengali: 'ঘূর্ণায়মান পাথরে শ্যাওলা জমে না।', note: "৪০তম ও ৪৬তম বিসিএসে আসা প্রশ্ন। পাথরটির চলমান অবস্থা (running action) বোঝাচ্ছে, তাই 'rolling' এখানে Participle (Adjective)।" },
           { english: 'Swimming is a good exercise.', bengali: 'সাঁতার কাটা একটি ভালো ব্যায়াম।', note: "'Swimming' এখানে Subject হিসেবে Noun-এর কাজ করছে, তাই Gerund।" },
