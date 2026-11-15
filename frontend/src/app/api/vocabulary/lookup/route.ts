@@ -138,9 +138,20 @@ export async function POST(req: NextRequest) {
       ipaPhonetic = googleIpa;
     }
 
-    const bengaliPronunciation = accuratePronunciation.status === 'fulfilled'
-      ? accuratePronunciation.value
-      : cleanWord;
+    let bengaliPronunciation =
+      accuratePronunciation.status === 'fulfilled' && accuratePronunciation.value
+        ? accuratePronunciation.value
+        : '';
+
+    if (!bengaliPronunciation) {
+      const { transliterateWordToBengali, ipaToBengaliPronunciation } = await import('@/lib/phonetics');
+      if (ipaPhonetic) {
+        bengaliPronunciation = ipaToBengaliPronunciation(ipaPhonetic) || '';
+      }
+      if (!bengaliPronunciation) {
+        bengaliPronunciation = transliterateWordToBengali(cleanWord);
+      }
+    }
 
     const [synonyms, antonyms] = await Promise.all([
       enrichRelationList(rawSynonyms),

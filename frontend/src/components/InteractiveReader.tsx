@@ -183,6 +183,12 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
       if (e.code === 'Space') {
         e.preventDefault();
         scrollByAmount(e.shiftKey ? -320 : 320);
+      } else if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        scrollByAmount(180);
+      } else if (e.code === 'ArrowUp') {
+        e.preventDefault();
+        scrollByAmount(-180);
       } else if (e.code === 'PageDown') {
         e.preventDefault();
         scrollByAmount(420);
@@ -582,7 +588,7 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
       </div>
 
       {/* Floating Smooth Scroll Quick Control Bar */}
-      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 flex items-center gap-1 p-1 rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-xl border border-slate-200/90 dark:border-slate-800 backdrop-blur-md select-none transition-all duration-200">
+      <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-30 flex items-center gap-1 p-1 rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-2xl ring-1 ring-slate-900/10 dark:ring-white/10 border border-slate-200/90 dark:border-slate-800 backdrop-blur-md select-none transition-all duration-200">
         {/* Realtime Progress Tag */}
         <span className="px-2 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 font-mono">
           {scrollProgress}%

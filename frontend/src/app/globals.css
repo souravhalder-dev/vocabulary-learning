@@ -52,16 +52,16 @@ body {
 
 /* Smooth momentum scrolling for containers */
 .smooth-scroll-container {
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  touch-action: pan-y;
 }
 
 /* Dedicated high-visibility scrollbar for Reading Room */
 .reader-scroll-area {
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  touch-action: pan-y;
   scrollbar-gutter: stable;
 }
 

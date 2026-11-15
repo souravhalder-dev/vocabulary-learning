@@ -248,6 +248,11 @@ export const COMMON_PRONUNCIATION_DICT: Record<string, string> = {
   economist: "ইকোনমিস্ট",
   culture: "কালচার",
   cultural: "কালচারাল",
+  country: "কান্ট্রি",
+  countries: "কান্ট্রিজ",
+  energy: "এনার্জি",
+  climate: "ক্লাইমেট",
+  strategy: "স্ট্র্যাটেজি",
   culturally: "কালচারালি",
   horizon: "হরাইজন",
   horizons: "হরাইজনস",
@@ -592,15 +597,28 @@ const PHONEME_MAP: Record<string, string> = {
 };
 
 const IPA_CONSONANTS: [string, string][] = [
+  // 3-char clusters (matched first to prevent sub-cluster stealing)
   ["str", "স্ট্র"], ["stɹ", "স্ট্র"], ["stj", "স্টু"], ["skw", "স্কু"], ["skr", "স্ক্র"], ["skɹ", "স্ক্র"],
-  ["sk", "স্ক"], ["spr", "স্প্র"], ["spɹ", "স্প্র"], ["sp", "স্প"], ["st", "স্ট"],
-  ["tr", "ট্র"], ["tɹ", "ট্র"], ["dr", "ড্র"], ["dɹ", "ড্র"], ["br", "ব্র"], ["bɹ", "ব্র"],
-  ["kr", "ক্র"], ["kɹ", "ক্র"], ["gr", "গ্র"], ["ɡr", "গ্র"], ["ɡɹ", "গ্র"],
+  ["spr", "স্প্র"], ["spɹ", "স্প্র"], ["spl", "স্প্ল"], ["sfr", "স্ফ্র"],
+  ["ntr", "ন্ট্র"], ["ntɹ", "ন্ট্র"], ["ndr", "ন্ড্র"], ["ndɹ", "ন্ড্র"],
+  ["ktr", "ক্ট্র"], ["kst", "ক্সট"], ["ŋkr", "স্ক্র"],
+
+  // 2-char affricates & clusters
+  ["t͡ʃ", "চ"], ["d͡ʒ", "জ"], ["tʃ", "চ"], ["dʒ", "জ"],
+  ["ts", "ৎস"], ["dz", "দ্জ"],
+  ["tr", "ট্র"], ["tɹ", "ট্র"], ["dr", "ড্র"], ["dɹ", "ড্র"],
+  ["br", "ব্র"], ["bɹ", "ব্র"], ["kr", "ক্র"], ["kɹ", "ক্র"],
+  ["gr", "গ্র"], ["ɡr", "গ্র"], ["ɡɹ", "গ্র"],
   ["pr", "প্র"], ["pɹ", "প্র"], ["fr", "ফ্র"], ["fɹ", "ফ্র"],
+  ["sk", "স্ক"], ["sp", "স্প"], ["st", "স্ট"], ["sm", "স্ম"], ["sn", "স্ন"],
+  ["sl", "স্ল"], ["sw", "সোয়"],
+  ["kl", "ক্ল"], ["pl", "প্ল"], ["bl", "ব্ল"], ["fl", "ফ্ল"], ["gl", "গ্ল"], ["ɡl", "গ্ল"],
   ["nt", "ন্ট"], ["nd", "ন্ড"], ["mp", "ম্প"], ["mb", "ম্ব"], ["ŋk", "ঙ্ক"], ["kt", "ক্ট"], ["ks", "ক্স"],
   ["ld", "ল্ড"], ["lt", "ল্ট"], ["rd", "র্ড"], ["rt", "র্ট"], ["rk", "র্ক"], ["rn", "র্ন"], ["rm", "র্ম"],
-  ["kl", "ক্ল"], ["pl", "প্ল"], ["bl", "ব্ল"], ["fl", "ফ্ল"], ["gl", "গ্ল"],
-  ["tʃ", "চ"], ["dʒ", "জ"], ["t͡ʃ", "চ"], ["d͡ʒ", "জ"],
+  ["rf", "র্ফ"], ["rv", "র্ভ"], ["rs", "র্স"], ["rz", "র্জ"], ["rb", "র্ব"], ["rp", "র্প"], ["rg", "র্গ"],
+  ["ft", "ফ্ট"], ["pt", "প্ট"],
+
+  // Single phonemes
   ["ʃ", "শ"], ["ʒ", "ঝ"], ["θ", "থ"], ["ð", "দ"], ["ŋ", "ং"],
   ["b", "ব"], ["p", "প"], ["d", "ড"], ["t", "ট"], ["k", "ক"], ["ɡ", "গ"], ["g", "গ"],
   ["m", "ম"], ["n", "ন"], ["l", "ল"], ["ɫ", "ল"], ["ɹ", "র"], ["r", "র"], ["s", "স"], ["z", "জ"],
@@ -608,26 +626,37 @@ const IPA_CONSONANTS: [string, string][] = [
 ];
 
 const IPA_VOWELS: [string, string, string][] = [
+  // Multi-char suffixes & diphthongs
   ["eɪ", "এই", "েই"], ["aɪ", "আই", "াই"], ["ɔɪ", "অয়", "য়"], ["aʊ", "আউ", "াউ"],
   ["əʊ", "ও", "ো"], ["oʊ", "ও", "ো"], ["juː", "ইউ", "িউ"], ["ju", "ইউ", "িউ"],
-  ["iː", "ঈ", "ী"], ["uː", "উ", "ু"], ["ɔː", "অ", "ো"], ["ɑː", "আ", "া"],
+  ["iː", "ঈ", "ী"], ["uː", "উ", "ু"],
+  ["ɔːr", "অর", "োর"], ["ɔːɹ", "অর", "োর"], ["ɔː", "অ", "ো"],
+  ["ɑːr", "আর", "ার"], ["ɑːɹ", "আর", "ার"], ["ɑː", "আ", "া"],
   ["wɜːld", "ওয়ার্ল্ড", "ওয়ার্ল্ড"], ["wɜld", "ওয়ার্ল্ড", "ওয়ার্ল্ড"],
-  ["ɜːld", "ওয়ার্ল্ড", "ওয়ার্ল্ড"], ["ɜːr", "আর", "ার"], ["ɜː", "আ", "া"], ["ɜr", "আর", "ার"],
-  ["ər", "আর", "ার"], ["ɚ", "আর", "ার"],
-  ["tʃə", "চার", "চার"], ["tʃər", "চার", "চার"],
-  ["ʃn", "শন", "শন"], ["ʃən", "শন", "শন"],
-  ["ənt", "এন্ট", "েন্ট"], ["ʌnt", "এন্ট", "েন্ট"],
-  ["ənts", "এন্টস", "েন্টস"], ["ʌnts", "এন্টস", "েন্টস"],
-  ["ənd", "এন্ড", "েন্ড"], ["ʌnd", "এন্ড", "েন্ড"],
-  ["ənds", "এন্ডস", "েন্ডস"], ["ʌnds", "এন্ডস", "েন্ডস"],
+  ["ɜːld", "ওয়ার্ল্ড", "ওয়ার্ল্ড"], ["ɜːr", "আর", "ার"], ["ɜːɹ", "আর", "ার"],
+  ["ɜː", "আ", "া"], ["ɜr", "আর", "ার"], ["ɜɹ", "আর", "ার"],
+  ["ər", "আর", "ার"], ["əɹ", "আর", "ার"], ["ɚ", "আর", "ার"],
+
+  // Common English syllables in authentic IPA
+  ["əd͡ʒi", "এজি", "েজি"], ["ədʒi", "এজি", "েজি"],
+  ["əd͡ʒ", "এজি", "েজি"], ["ədʒ", "এজি", "েজি"],
+  ["ʃn", "শন", "শন"], ["ʃən", "শন", "শন"], ["ʒn", "শন", "শন"], ["ʒən", "শন", "শন"],
+  ["tʃə", "চার", "চার"], ["tʃər", "চার", "চার"], ["tʃəɹ", "চার", "চার"],
+  ["mənt", "মেন্ট", "মেন্ট"], ["əmənt", "মেন্ট", "মেন্ট"],
+  ["əbl", "এবল", "েবল"], ["əbəl", "এবল", "েবল"], ["ɪbl", "ইবল", "িবল"], ["ɪbəl", "ইবল", "িবল"],
   ["əns", "এন্স", "েন্স"], ["ənsɪz", "এন্সেস", "েন্সেস"],
-  ["əbl", "এবল", "এবল"], ["ɪbl", "ইবল", "ইবল"],
-  ["mən", "ম্যান", "ম্যান"], ["mʌn", "ম্যান", "ম্যান"],
-  ["kɜːnəl", "কার্নেল", "কার্নেল"], ["kɜnəl", "কার্নেল", "কার্নেল"],
+  ["ənt", "এন্ট", "েন্ট"], ["ənts", "এন্টস", "েন্টস"],
+  ["ənd", "এন্ড", "েন্ড"], ["ənds", "এন্ডস", "েন্ডস"],
+  ["mət", "মেট", "মেট"], ["mən", "ম্যান", "ম্যান"],
+
+  // Short vowels
   ["æ", "অ্যা", "্যা"], ["a", "অ্যা", "্যা"], ["ɛ", "এ", "ে"], ["e", "এ", "ে"],
   ["ɪd", "ইড", "েড"], ["əd", "ইড", "েড"],
-  ["ɪ", "ই", "ি"], ["ɒ", "অ", "ো"], ["ɔ", "অ", "ো"], ["ɑ", "আ", "া"],
-  ["ʌ", "আ", "া"], ["ʊ", "উ", "ু"], ["i", "ই", "ি"], ["u", "উ", "ু"],
+  ["ɪ", "ই", "ি"], ["i", "ই", "ি"],
+  ["ɒ", "অ", ""], // In British English /ɒ/ after consonant carries inherent 'o' (e.g. conference -> কনফারেন্স)
+  ["ɔ", "অ", "ো"],
+  ["ʌ", "আ", "া"], ["ɐ", "আ", "া"], // /ʌ/ and modern UK /ɐ/ strut vowel (country -> কান্ট্রি, countries -> কান্ট্রিজ, cut -> কাট)
+  ["ʊ", "উ", "ু"], ["u", "উ", "ু"],
   ["ə", "আ", "া"]
 ];
 
@@ -637,12 +666,10 @@ export function ipaToBengaliPronunciation(ipaStr?: string): string | null {
     let s = ipaStr
       .replace(/[\/\[\]ˌˈ.͡]/g, "")
       .replace(/ɫ/g, "l")
-      .replace(/ɹ/g, "r")
-      .replace(/ɡ/g, "g")
       .replace(/\(j\)/g, "j")
       .replace(/\(ə\)/g, "")
-      .replace(/\(r\)/g, "r")
-      .replace(/\(ɹ\)/g, "r")
+      .replace(/\(([a-zA-Zəɹ]+)\)/g, "$1")
+      .replace(/̩/g, "")
       .trim();
 
     s = s.replace(/wɜːld|wɜld/g, "ওয়ার্ল্ড");
@@ -650,8 +677,6 @@ export function ipaToBengaliPronunciation(ipaStr?: string): string | null {
     s = s.replace(/kriː?eɪtɪv|krieɪtɪv/g, "ক্রিয়েটিভ");
     s = s.replace(/kriː?eɪt|krieɪt/g, "ক্রিয়েট");
     s = s.replace(/kɜːnəl|kɜnəl/g, "কার্নেল");
-    s = s.replace(/ntɪd$|ntəd$/g, "ন্টেড");
-    s = s.replace(/mən$|mʌn$/g, "ম্যান");
 
     const result: string[] = [];
     let i = 0;
@@ -662,15 +687,22 @@ export function ipaToBengaliPronunciation(ipaStr?: string): string | null {
       let matchedVowel = false;
       for (const [ph, full, matra] of IPA_VOWELS) {
         if (s.startsWith(ph, i)) {
+          // "əd" and "ɪd" represent the past -ed suffix, only match at word end
+          if ((ph === "əd" || ph === "ɪd") && i + ph.length < n) {
+            continue;
+          }
           if (ph === "ə" && i + 1 === n) {
             result.push(lastWasConsonant ? matra : "া");
           } else if (ph === "ə") {
             if (!lastWasConsonant) result.push("অ");
+          } else if (ph === "ɒ") {
+            if (!lastWasConsonant) result.push(full);
           } else {
             result.push(lastWasConsonant ? matra : full);
           }
           i += ph.length;
-          lastWasConsonant = false;
+          // Rhotic vowels ending in r-sound leave lastWasConsonant true so subsequent suffixes receive matra
+          lastWasConsonant = ph.endsWith("r") || ph.endsWith("ɹ") || ph.endsWith("ɚ");
           matchedVowel = true;
           break;
         }
@@ -962,20 +994,13 @@ export async function fetchAccuratePronunciationOnline(word: string): Promise<st
   const clean = word.replace(/[^a-zA-Z]/g, "").trim().toLowerCase();
   if (!clean) return "";
 
-  // 1. Check verified dictionary
+  // 1. High-Confidence Curated Dictionary (instant, verified)
   if (COMMON_PRONUNCIATION_DICT[clean]) {
     return COMMON_PRONUNCIATION_DICT[clean];
   }
 
-  // 2. High-Accuracy AI-Powered Phonetic Analysis
-  try {
-    const aiPron = await fetchAiBengaliPronunciation(clean);
-    if (aiPron) {
-      return aiPron;
-    }
-  } catch {}
-
-  // 2. Free Dictionary API (Oxford/Cambridge IPA)
+  // 2. Primary Source: Reliable English Dictionary APIs (FreeDictionary Oxford/Cambridge & Datamuse CMUdict)
+  // Retrieve authentic IPA phonetics and convert into accurate Bengali phonetic spelling
   try {
     const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${clean}`, {
       headers: { "User-Agent": "Mozilla/5.0" }
@@ -986,22 +1011,33 @@ export async function fetchAccuratePronunciationOnline(word: string): Promise<st
         const first = data[0];
         let ipa = first.phonetic || "";
         if (!ipa && Array.isArray(first.phonetics)) {
+          // Prefer British UK phonetics where available
           for (const p of first.phonetics) {
-            if (p.text) {
+            if (p.text && (p.audio || "").toLowerCase().includes("uk")) {
               ipa = p.text;
-              if ((p.audio || "").toLowerCase().includes("uk")) break;
+              break;
+            }
+          }
+          if (!ipa) {
+            for (const p of first.phonetics) {
+              if (p.text) {
+                ipa = p.text;
+                break;
+              }
             }
           }
         }
         if (ipa) {
           const fromIpa = ipaToBengaliPronunciation(ipa);
-          if (fromIpa) return fromIpa;
+          if (fromIpa && fromIpa.length >= 2 && /[\u0980-\u09FF]/.test(fromIpa)) {
+            return fromIpa;
+          }
         }
       }
     }
   } catch {}
 
-  // 3. Datamuse API (CMUdict 134k+ words)
+  // 3. Secondary Dictionary Source: Datamuse API (134,000+ CMU Pronouncing Dictionary entries)
   try {
     const res = await fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(clean)}&qe=sp&md=dfrps&ipa=1&max=1`);
     if (res.ok) {
@@ -1011,21 +1047,34 @@ export async function fetchAccuratePronunciationOnline(word: string): Promise<st
           if (t.startsWith("ipa_pron:")) {
             const ipa = t.replace("ipa_pron:", "");
             const fromIpa = ipaToBengaliPronunciation(ipa);
-            if (fromIpa) return fromIpa;
+            if (fromIpa && fromIpa.length >= 2 && /[\u0980-\u09FF]/.test(fromIpa)) {
+              return fromIpa;
+            }
           }
         }
         for (const t of data[0].tags) {
           if (t.startsWith("pron:")) {
             const arpa = t.replace("pron:", "").trim();
             const fromArpa = arpaToBengali(arpa);
-            if (fromArpa) return fromArpa;
+            if (fromArpa && fromArpa.length >= 2 && /[\u0980-\u09FF]/.test(fromArpa)) {
+              return fromArpa;
+            }
           }
         }
       }
     }
   } catch {}
 
-  // 4. Google GTX Phonetics Fallback
+  // 4. Secondary Verification & Generation Layer: AI-Powered Phonetic Analysis via LangChain
+  // Used whenever dictionary API lacks the word or for uncommon, slang, or complex words
+  try {
+    const aiPron = await fetchAiBengaliPronunciation(clean);
+    if (aiPron && aiPron.length >= 2 && /[\u0980-\u09FF]/.test(aiPron)) {
+      return aiPron;
+    }
+  } catch {}
+
+  // 5. Google GTX Lexicon IPA Fallback
   try {
     const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&dt=bd&dt=rm&q=${encodeURIComponent(clean)}`, {
       headers: { "User-Agent": "Mozilla/5.0" }
@@ -1034,12 +1083,14 @@ export async function fetchAccuratePronunciationOnline(word: string): Promise<st
       const data = await res.json();
       if (data?.[0]?.[1]?.[3]) {
         const fromGoogle = ipaToBengaliPronunciation(data[0][1][3]);
-        if (fromGoogle) return fromGoogle;
+        if (fromGoogle && fromGoogle.length >= 2 && /[\u0980-\u09FF]/.test(fromGoogle)) {
+          return fromGoogle;
+        }
       }
     }
   } catch {}
 
-  // 5. Intelligent Grapheme-to-Phoneme Fallback
+  // 6. Intelligent Grapheme-to-Phoneme Fallback
   return transliterateWordToBengali(clean);
 }
 

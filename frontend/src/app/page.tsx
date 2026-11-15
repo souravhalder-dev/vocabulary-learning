@@ -194,7 +194,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20 md:pb-0">
+    <div className={`min-h-screen ${activeTab === 'reader' ? 'h-screen md:h-[100dvh] max-h-[100dvh] overflow-hidden' : 'pb-20 md:pb-0'} flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100`}>
       {/* Top Navigation */}
       <Navbar
         onOpenImport={() => setShowImportModal(true)}
@@ -211,7 +211,7 @@ export default function Home() {
       />
 
       {/* Main Workspace */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className={`flex flex-1 min-h-0 ${activeTab === 'reader' ? 'h-full overflow-hidden pb-16 md:pb-0' : 'overflow-hidden'}`}>
         {/* Left Sidebar */}
         <Sidebar
           activeTab={activeTab}
@@ -222,9 +222,9 @@ export default function Home() {
 
         {/* Center Workspace Content */}
         <main
-          className={`flex-1 ${
+          className={`flex-1 min-h-0 ${
             activeTab === 'reader'
-              ? 'overflow-hidden p-2 sm:p-4 lg:p-6'
+              ? 'h-full overflow-hidden p-2 sm:p-4 lg:p-6 flex flex-col'
               : 'overflow-y-auto p-3 sm:p-6 lg:p-8'
           } max-w-7xl mx-auto w-full`}
         >
@@ -259,9 +259,9 @@ export default function Home() {
           )}
 
           {activeTab === 'reader' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 h-full min-h-0">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 h-full min-h-0 flex-1">
               {/* Left/Center Main Reading Area */}
-              <div className="lg:col-span-8 h-full min-h-0">
+              <div className="lg:col-span-8 h-full min-h-0 flex flex-col">
                 {selectedDoc ? (
                   <InteractiveReader
                     document={selectedDoc}
@@ -291,7 +291,7 @@ export default function Home() {
               </div>
 
               {/* Right Side Vocabulary Popup / Details Panel */}
-              <div className="hidden lg:block lg:col-span-4 h-full min-h-0 rounded-2xl shadow-sm overflow-hidden border border-slate-200 dark:border-slate-800">
+              <div className="hidden lg:flex lg:col-span-4 h-full min-h-0 flex-col rounded-2xl shadow-sm overflow-hidden border border-slate-200 dark:border-slate-800">
                 <WordDetailPanel
                   vocabulary={selectedWordVocab}
                   onToggleLearned={handleToggleWordLearned}
