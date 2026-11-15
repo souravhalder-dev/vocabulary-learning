@@ -38,28 +38,30 @@ async function fetchBengaliMeaning(word: string) {
 
 async function enrichRelationList(words: string[]) {
   const cleanList = Array.from(new Set(words.map((w) => w.replace(/[^a-zA-Z]/g, '').toLowerCase()).filter(Boolean))).slice(0, 3);
-  const results = [];
-  for (const w of cleanList) {
-    let meaning = w;
-    try {
-      const trRes = await fetch(
-        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&q=${encodeURIComponent(w)}`,
-        { headers: { 'User-Agent': 'Mozilla/5.0' } }
-      );
-      if (trRes.ok) {
-        const d = await trRes.json();
-        if (d?.[0]?.[0]?.[0]) meaning = d[0][0][0];
-      }
-    } catch {}
+  return await Promise.all(
+    cleanList.map(async (w) => {
+      let meaning = w;
+      try {
+        const trRes = await fetch(
+          `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&q=${encodeURIComponent(w)}`,
+          { headers: { 'User-Agent': 'Mozilla/5.0' } }
+        );
+        if (trRes.ok) {
+          const d = await trRes.json();
+          if (d?.[0]?.[0]?.[0]) meaning = d[0][0][0];
+        }
+      } catch {}
 
-    const pron = await fetchAccuratePronunciationOnline(w);
-    results.push({
-      word: w,
-      bengali_pronunciation: pron,
-      bengali_meaning: meaning,
-    });
-  }
-  return results;
+      // Fast synchronous rule + verified dict for relations so request never exceeds Vercel limits
+      const { transliterateWordToBengali } = await import('@/lib/phonetics');
+      const pron = transliterateWordToBengali(w);
+      return {
+        word: w,
+        bengali_pronunciation: pron,
+        bengali_meaning: meaning,
+      };
+    })
+  );
 }
 
 export async function POST(req: NextRequest) {
@@ -71,102 +73,74 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ detail: 'Invalid word' }, { status: 400 });
     }
 
-    const { meaning: bengaliMeaning, pos, googleIpa } = await fetchBengaliMeaning(cleanWord);
-
     let englishDefinition = `Contextual usage and definition of '${cleanWord}'.`;
     let ipaPhonetic = '';
     let exampleSentence = body.context_sentence || `The word '${cleanWord}' is frequently used in modern English.`;
     const rawSynonyms: string[] = [];
     const rawAntonyms: string[] = [];
 
-    // 1. Primary: Free Dictionary API lookup for definitions, part of speech, IPA, synonyms, antonyms
-    try {
-      const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${cleanWord}`, {
+    // Parallel fetch: Bengali Meaning, Dictionary API, Datamuse, and AI Pronunciation
+    const [meaningData, dictData, datamuseData, accuratePronunciation] = await Promise.allSettled([
+      fetchBengaliMeaning(cleanWord),
+      fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${cleanWord}`, {
         headers: { 'User-Agent': 'Mozilla/5.0' }
-      });
-      if (dictRes.ok) {
-        const entries = await dictRes.json();
-        if (Array.isArray(entries) && entries.length > 0) {
-          const first = entries[0];
-          ipaPhonetic = first.phonetic || '';
-          if (!ipaPhonetic && Array.isArray(first.phonetics)) {
-            for (const p of first.phonetics) {
-              if (p.text) {
-                ipaPhonetic = p.text;
-                if ((p.audio || '').toLowerCase().includes('uk')) {
-                  break;
-                }
-              }
-            }
-          }
-          if (first.meanings) {
-            for (const m of first.meanings) {
-              if (m.synonyms) rawSynonyms.push(...m.synonyms);
-              if (m.antonyms) rawAntonyms.push(...m.antonyms);
-              for (const d of m.definitions || []) {
-                if (d.synonyms) rawSynonyms.push(...d.synonyms);
-                if (d.antonyms) rawAntonyms.push(...d.antonyms);
-                if (d.definition && !englishDefinition) englishDefinition = d.definition;
-                if (d.example && !body.context_sentence) exampleSentence = d.example;
-              }
-            }
+      }).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(cleanWord)}&qe=sp&md=dfrps&ipa=1&max=1`)
+        .then(r => r.ok ? r.json() : null).catch(() => null),
+      fetchAccuratePronunciationOnline(cleanWord)
+    ]);
+
+    const bengaliMeaning = meaningData.status === 'fulfilled' ? meaningData.value.meaning : cleanWord;
+    const pos = meaningData.status === 'fulfilled' ? meaningData.value.pos : 'word';
+    const googleIpa = meaningData.status === 'fulfilled' ? meaningData.value.googleIpa : '';
+
+    if (dictData.status === 'fulfilled' && Array.isArray(dictData.value) && dictData.value.length > 0) {
+      const first = dictData.value[0];
+      ipaPhonetic = first.phonetic || '';
+      if (!ipaPhonetic && Array.isArray(first.phonetics)) {
+        for (const p of first.phonetics) {
+          if (p.text) {
+            ipaPhonetic = p.text;
+            if ((p.audio || '').toLowerCase().includes('uk')) break;
           }
         }
       }
-    } catch (e) {
-      console.warn('Dictionary dev lookup notice:', e);
+      if (first.meanings) {
+        for (const m of first.meanings) {
+          if (m.synonyms) rawSynonyms.push(...m.synonyms);
+          if (m.antonyms) rawAntonyms.push(...m.antonyms);
+          for (const d of m.definitions || []) {
+            if (d.synonyms) rawSynonyms.push(...d.synonyms);
+            if (d.antonyms) rawAntonyms.push(...d.antonyms);
+            if (d.definition && !englishDefinition) englishDefinition = d.definition;
+            if (d.example && !body.context_sentence) exampleSentence = d.example;
+          }
+        }
+      }
     }
 
-    // 2. Secondary: Datamuse fallback for IPA, definitions, synonyms, antonyms
-    try {
-      const datamuseRes = await fetch(
-        `https://api.datamuse.com/words?sp=${encodeURIComponent(cleanWord)}&qe=sp&md=dfrps&ipa=1&max=1`
-      );
-      if (datamuseRes.ok) {
-        const dmData = await datamuseRes.json();
-        if (Array.isArray(dmData) && dmData.length > 0) {
-          const dm = dmData[0];
-          if (!ipaPhonetic && dm.tags) {
-            for (const t of dm.tags) {
-              if (t.startsWith('ipa_pron:')) {
-                ipaPhonetic = t.replace('ipa_pron:', '');
-                break;
-              }
-            }
-          }
-          if (dm.defs && dm.defs.length > 0 && englishDefinition.startsWith('Contextual usage')) {
-            englishDefinition = dm.defs[0].replace(/^[a-z]+\t/, '').trim();
+    if (datamuseData.status === 'fulfilled' && Array.isArray(datamuseData.value) && datamuseData.value.length > 0) {
+      const dm = datamuseData.value[0];
+      if (!ipaPhonetic && dm.tags) {
+        for (const t of dm.tags) {
+          if (t.startsWith('ipa_pron:')) {
+            ipaPhonetic = t.replace('ipa_pron:', '');
+            break;
           }
         }
       }
-    } catch {}
-
-    // Datamuse relation fallback
-    if (rawSynonyms.length === 0 || rawAntonyms.length === 0) {
-      try {
-        if (rawSynonyms.length === 0) {
-          const synRes = await fetch(`https://api.datamuse.com/words?rel_syn=${cleanWord}&max=4`);
-          if (synRes.ok) {
-            const list = await synRes.json();
-            rawSynonyms.push(...list.map((item: any) => item.word));
-          }
-        }
-        if (rawAntonyms.length === 0) {
-          const antRes = await fetch(`https://api.datamuse.com/words?rel_ant=${cleanWord}&max=4`);
-          if (antRes.ok) {
-            const list = await antRes.json();
-            rawAntonyms.push(...list.map((item: any) => item.word));
-          }
-        }
-      } catch {}
+      if (dm.defs && dm.defs.length > 0 && englishDefinition.startsWith('Contextual usage')) {
+        englishDefinition = dm.defs[0].replace(/^[a-z]+\t/, '').trim();
+      }
     }
 
     if (!ipaPhonetic && googleIpa) {
       ipaPhonetic = googleIpa;
     }
 
-    // 3. Multi-tier verified accurate pronunciation in Bengali script
-    const bengaliPronunciation = await fetchAccuratePronunciationOnline(cleanWord);
+    const bengaliPronunciation = accuratePronunciation.status === 'fulfilled'
+      ? accuratePronunciation.value
+      : cleanWord;
 
     const [synonyms, antonyms] = await Promise.all([
       enrichRelationList(rawSynonyms),
