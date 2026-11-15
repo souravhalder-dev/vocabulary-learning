@@ -994,103 +994,21 @@ export async function fetchAccuratePronunciationOnline(word: string): Promise<st
   const clean = word.replace(/[^a-zA-Z]/g, "").trim().toLowerCase();
   if (!clean) return "";
 
-  // 1. High-Confidence Curated Dictionary (instant, verified)
+  // 1. High-Confidence Curated Dictionary
   if (COMMON_PRONUNCIATION_DICT[clean]) {
     return COMMON_PRONUNCIATION_DICT[clean];
   }
 
-  // 2. Primary Source: Reliable English Dictionary APIs (FreeDictionary Oxford/Cambridge & Datamuse CMUdict)
-  // Retrieve authentic IPA phonetics and convert into accurate Bengali phonetic spelling
+  // 2. Delegate to Unified Dual-Accent Phonetics Engine (UK British default)
   try {
-    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${clean}`, {
-      headers: { "User-Agent": "Mozilla/5.0" }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        const first = data[0];
-        let ipa = first.phonetic || "";
-        if (!ipa && Array.isArray(first.phonetics)) {
-          // Prefer British UK phonetics where available
-          for (const p of first.phonetics) {
-            if (p.text && (p.audio || "").toLowerCase().includes("uk")) {
-              ipa = p.text;
-              break;
-            }
-          }
-          if (!ipa) {
-            for (const p of first.phonetics) {
-              if (p.text) {
-                ipa = p.text;
-                break;
-              }
-            }
-          }
-        }
-        if (ipa) {
-          const fromIpa = ipaToBengaliPronunciation(ipa);
-          if (fromIpa && fromIpa.length >= 2 && /[\u0980-\u09FF]/.test(fromIpa)) {
-            return fromIpa;
-          }
-        }
-      }
+    const { lookupWordDualAccentPronunciation } = await import("./phonetics-engine");
+    const dual = await lookupWordDualAccentPronunciation(clean);
+    if (dual?.uk?.bengali_pronunciation && dual.uk.bengali_pronunciation !== "উচ্চারণ পাওয়া যায়নি") {
+      return dual.uk.bengali_pronunciation;
     }
   } catch {}
 
-  // 3. Secondary Dictionary Source: Datamuse API (134,000+ CMU Pronouncing Dictionary entries)
-  try {
-    const res = await fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(clean)}&qe=sp&md=dfrps&ipa=1&max=1`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.[0]?.tags) {
-        for (const t of data[0].tags) {
-          if (t.startsWith("ipa_pron:")) {
-            const ipa = t.replace("ipa_pron:", "");
-            const fromIpa = ipaToBengaliPronunciation(ipa);
-            if (fromIpa && fromIpa.length >= 2 && /[\u0980-\u09FF]/.test(fromIpa)) {
-              return fromIpa;
-            }
-          }
-        }
-        for (const t of data[0].tags) {
-          if (t.startsWith("pron:")) {
-            const arpa = t.replace("pron:", "").trim();
-            const fromArpa = arpaToBengali(arpa);
-            if (fromArpa && fromArpa.length >= 2 && /[\u0980-\u09FF]/.test(fromArpa)) {
-              return fromArpa;
-            }
-          }
-        }
-      }
-    }
-  } catch {}
-
-  // 4. Secondary Verification & Generation Layer: AI-Powered Phonetic Analysis via LangChain
-  // Used whenever dictionary API lacks the word or for uncommon, slang, or complex words
-  try {
-    const aiPron = await fetchAiBengaliPronunciation(clean);
-    if (aiPron && aiPron.length >= 2 && /[\u0980-\u09FF]/.test(aiPron)) {
-      return aiPron;
-    }
-  } catch {}
-
-  // 5. Google GTX Lexicon IPA Fallback
-  try {
-    const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=bn&dt=t&dt=bd&dt=rm&q=${encodeURIComponent(clean)}`, {
-      headers: { "User-Agent": "Mozilla/5.0" }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.[0]?.[1]?.[3]) {
-        const fromGoogle = ipaToBengaliPronunciation(data[0][1][3]);
-        if (fromGoogle && fromGoogle.length >= 2 && /[\u0980-\u09FF]/.test(fromGoogle)) {
-          return fromGoogle;
-        }
-      }
-    }
-  } catch {}
-
-  // 6. Intelligent Grapheme-to-Phoneme Fallback
+  // 3. Fallback to grapheme transliteration
   return transliterateWordToBengali(clean);
 }
 

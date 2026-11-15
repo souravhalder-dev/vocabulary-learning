@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchAccuratePronunciationOnline } from '@/lib/phonetics';
+import { lookupWordDualAccentPronunciation } from '@/lib/phonetics-engine';
 
 async function fetchBengaliMeaning(word: string) {
   try {
@@ -79,29 +79,36 @@ export async function POST(req: NextRequest) {
     const rawSynonyms: string[] = [];
     const rawAntonyms: string[] = [];
 
-    // Parallel fetch: Bengali Meaning, Dictionary API, Datamuse, and AI Pronunciation
-    const [meaningData, dictData, datamuseData, accuratePronunciation] = await Promise.allSettled([
+    // Parallel fetch: Bengali Meaning, Dictionary API (meanings/relations), Datamuse, and Dual-Accent Pronunciation Engine
+    const [meaningData, dictData, datamuseData, dualPronResult] = await Promise.allSettled([
       fetchBengaliMeaning(cleanWord),
       fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${cleanWord}`, {
         headers: { 'User-Agent': 'Mozilla/5.0' }
       }).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(cleanWord)}&qe=sp&md=dfrps&ipa=1&max=1`)
         .then(r => r.ok ? r.json() : null).catch(() => null),
-      fetchAccuratePronunciationOnline(cleanWord)
+      lookupWordDualAccentPronunciation(cleanWord)
     ]);
 
     const bengaliMeaning = meaningData.status === 'fulfilled' ? meaningData.value.meaning : cleanWord;
     const pos = meaningData.status === 'fulfilled' ? meaningData.value.pos : 'word';
-    const googleIpa = meaningData.status === 'fulfilled' ? meaningData.value.googleIpa : '';
+
+    const dualPron = dualPronResult.status === 'fulfilled' ? dualPronResult.value : null;
+
+    let ukIpa = dualPron?.uk.ipa || '';
+    let usIpa = dualPron?.us.ipa || '';
+    let ukAudio = dualPron?.uk.audio_url || '';
+    let usAudio = dualPron?.us.audio_url || '';
 
     if (dictData.status === 'fulfilled' && Array.isArray(dictData.value) && dictData.value.length > 0) {
       const first = dictData.value[0];
-      ipaPhonetic = first.phonetic || '';
-      if (!ipaPhonetic && Array.isArray(first.phonetics)) {
+      if (first.phonetics) {
         for (const p of first.phonetics) {
-          if (p.text) {
-            ipaPhonetic = p.text;
-            if ((p.audio || '').toLowerCase().includes('uk')) break;
+          const audio = (p.audio || '').toLowerCase();
+          if (audio.includes('-uk') || audio.includes('/uk/')) {
+            if (!ukAudio) ukAudio = p.audio!;
+          } else if (audio.includes('-us') || audio.includes('/us/')) {
+            if (!usAudio) usAudio = p.audio!;
           }
         }
       }
@@ -121,37 +128,15 @@ export async function POST(req: NextRequest) {
 
     if (datamuseData.status === 'fulfilled' && Array.isArray(datamuseData.value) && datamuseData.value.length > 0) {
       const dm = datamuseData.value[0];
-      if (!ipaPhonetic && dm.tags) {
-        for (const t of dm.tags) {
-          if (t.startsWith('ipa_pron:')) {
-            ipaPhonetic = t.replace('ipa_pron:', '');
-            break;
-          }
-        }
-      }
       if (dm.defs && dm.defs.length > 0 && englishDefinition.startsWith('Contextual usage')) {
         englishDefinition = dm.defs[0].replace(/^[a-z]+\t/, '').trim();
       }
     }
 
-    if (!ipaPhonetic && googleIpa) {
-      ipaPhonetic = googleIpa;
-    }
-
-    let bengaliPronunciation =
-      accuratePronunciation.status === 'fulfilled' && accuratePronunciation.value
-        ? accuratePronunciation.value
-        : '';
-
-    if (!bengaliPronunciation) {
-      const { transliterateWordToBengali, ipaToBengaliPronunciation } = await import('@/lib/phonetics');
-      if (ipaPhonetic) {
-        bengaliPronunciation = ipaToBengaliPronunciation(ipaPhonetic) || '';
-      }
-      if (!bengaliPronunciation) {
-        bengaliPronunciation = transliterateWordToBengali(cleanWord);
-      }
-    }
+    // Default to British English (UK) as required by specification
+    const defaultBengaliPron = dualPron?.uk.bengali_pronunciation || 'উচ্চারণ পাওয়া যায়নি';
+    const defaultIpa = ukIpa || usIpa || '';
+    const defaultAudio = ukAudio || usAudio || '';
 
     const [synonyms, antonyms] = await Promise.all([
       enrichRelationList(rawSynonyms),
@@ -162,10 +147,28 @@ export async function POST(req: NextRequest) {
       id: Date.now(),
       word: cleanWord,
       original_word: rawWord,
-      bengali_pronunciation: bengaliPronunciation,
+      // Default (British English) properties for backwards compatibility
+      bengali_pronunciation: defaultBengaliPron,
       bengali_meaning: bengaliMeaning,
       english_definition: englishDefinition,
-      ipa_phonetic: ipaPhonetic,
+      ipa_phonetic: defaultIpa,
+      audio_url: defaultAudio,
+
+      // Dual Accent configuration
+      active_accent: 'uk',
+      pronunciation_uk: {
+        ipa: ukIpa,
+        bengali_pronunciation: dualPron?.uk.bengali_pronunciation || defaultBengaliPron,
+        audio_url: ukAudio || undefined,
+        source: dualPron?.uk.source || 'unavailable',
+      },
+      pronunciation_us: {
+        ipa: usIpa,
+        bengali_pronunciation: dualPron?.us.bengali_pronunciation || defaultBengaliPron,
+        audio_url: usAudio || undefined,
+        source: dualPron?.us.source || 'unavailable',
+      },
+
       part_of_speech: pos,
       example_sentence: exampleSentence,
       bengali_example: '',

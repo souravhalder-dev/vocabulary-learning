@@ -1,23 +1,69 @@
 /**
- * High-performance speech synthesis utility using native browser Web Speech API.
- * Works completely offline with zero latency and support for variable playback rates.
+ * High-performance audio player & speech synthesis utility.
+ * Supports authentic native-speaker MP3 dictionary recordings and native browser Web Speech API.
+ * Supports distinct British English (UK, en-GB) and American English (US, en-US) accents.
  */
 
 export interface SpeechOptions {
   rate?: number; // 1.0 (normal), 0.75 (slow), 0.5 (very slow)
   pitch?: number;
   lang?: string;
+  accent?: 'uk' | 'us';
+  audioUrl?: string;
   onStart?: () => void;
   onEnd?: () => void;
   onError?: (err: any) => void;
 }
 
 let currentUtterance: SpeechSynthesisUtterance | null = null;
+let currentAudio: HTMLAudioElement | null = null;
 
 export function stopSpeaking() {
-  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
+  if (typeof window !== 'undefined') {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio = null;
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
   }
+}
+
+export function playNativeAudioOrSpeak(text: string, options: SpeechOptions = {}) {
+  stopSpeaking();
+
+  const accent = options.accent || 'uk';
+  const targetLang = options.lang || (accent === 'uk' ? 'en-GB' : 'en-US');
+  const speed = options.rate ?? 0.85;
+
+  // 1. If authentic recorded native-speaker audio URL is provided from dictionary, play it!
+  if (options.audioUrl && typeof window !== 'undefined') {
+    try {
+      const audio = new Audio(options.audioUrl);
+      audio.playbackRate = speed;
+      audio.onplay = () => options.onStart?.();
+      audio.onended = () => {
+        currentAudio = null;
+        options.onEnd?.();
+      };
+      audio.onerror = () => {
+        currentAudio = null;
+        // Fall back to Web Speech Synthesis if network audio fails
+        speakEnglishText(text, { ...options, audioUrl: undefined, lang: targetLang });
+      };
+      currentAudio = audio;
+      audio.play().catch(() => {
+        speakEnglishText(text, { ...options, audioUrl: undefined, lang: targetLang });
+      });
+      return;
+    } catch {
+      // Fall through to Web Speech
+    }
+  }
+
+  // 2. Browser Web Speech API with accent-targeted voice
+  speakEnglishText(text, { ...options, lang: targetLang });
 }
 
 export function speakEnglishText(text: string, options: SpeechOptions = {}) {
@@ -26,27 +72,39 @@ export function speakEnglishText(text: string, options: SpeechOptions = {}) {
     return;
   }
 
-  // Cancel any ongoing speech
-  window.speechSynthesis.cancel();
+  stopSpeaking();
+
+  const accent = options.accent || 'uk';
+  const targetLang = options.lang || (accent === 'uk' ? 'en-GB' : 'en-US');
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = options.lang || 'en-US';
-  utterance.rate = options.rate ?? 0.85; // Slightly slower default for language learners
+  utterance.lang = targetLang;
+  utterance.rate = options.rate ?? 0.85;
   utterance.pitch = options.pitch ?? 1.0;
 
-  // Attempt to select high quality English voice
+  // Attempt to select accent-matching English voice
   const voices = window.speechSynthesis.getVoices();
-  const englishVoice = voices.find(
-    (v) => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('David'))
-  ) || voices.find((v) => v.lang.startsWith('en'));
+  const accentPrefix = accent === 'uk' ? 'en-GB' : 'en-US';
 
-  if (englishVoice) {
-    utterance.voice = englishVoice;
+  const exactVoice = voices.find(
+    (v) => (v.lang === accentPrefix || v.lang.startsWith(accentPrefix)) &&
+      (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Online') || v.name.includes('George') || v.name.includes('Hazel') || v.name.includes('Samantha') || v.name.includes('David'))
+  ) || voices.find((v) => v.lang.startsWith(accentPrefix))
+    || voices.find((v) => v.lang.startsWith('en'));
+
+  if (exactVoice) {
+    utterance.voice = exactVoice;
   }
 
   if (options.onStart) utterance.onstart = options.onStart;
-  if (options.onEnd) utterance.onend = options.onEnd;
-  if (options.onError) utterance.onerror = options.onError;
+  utterance.onend = () => {
+    currentUtterance = null;
+    options.onEnd?.();
+  };
+  utterance.onerror = (err) => {
+    currentUtterance = null;
+    options.onError?.(err);
+  };
 
   currentUtterance = utterance;
   window.speechSynthesis.speak(utterance);

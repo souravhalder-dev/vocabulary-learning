@@ -52,7 +52,9 @@ function extractBengali(text: string): string | null {
 
 // ── Main export: AI-powered Bengali pronunciation via LangChain ──────────────
 export async function fetchAiBengaliPronunciationLC(
-  word: string
+  word: string,
+  accent: 'uk' | 'us' = 'uk',
+  givenIpa?: string
 ): Promise<string | null> {
   const clean = word.replace(/[^a-zA-Z]/g, "").trim().toLowerCase();
   if (!clean) return null;
@@ -63,14 +65,17 @@ export async function fetchAiBengaliPronunciationLC(
   try {
     const model = getModel();
 
+    const accentDesc = accent === 'us'
+      ? "authentic General American English (US)"
+      : "authentic British English (UK/RP)";
+
+    const systemPrompt = givenIpa
+      ? `You are an expert English-to-Bengali phonetician. Given the English word and its authentic ${accentDesc} IPA transcription (${givenIpa}), convert it into accurate Bengali script pronunciation (বাংলা উচ্চারণ). Return ONLY the Bengali pronunciation word in Bengali script. Do not write English letters or explanation.`
+      : `You are an expert English-to-Bengali phonetician. Given an English word, write its ${accentDesc} pronunciation in Bengali script (বাংলা উচ্চারণ). Consider syllables, silent letters, and stress. Return ONLY the Bengali pronunciation word. No English, no explanation.`;
+
     const messages = [
-      new SystemMessage(
-        "You are an expert English-to-Bengali phonetician. " +
-          "Given an English word, write its natural British English pronunciation in Bengali script (বাংলা উচ্চারণ). " +
-          "Rules: consider syllables, silent letters, and stress. " +
-          "Return ONLY the Bengali pronunciation — no English letters, no explanation, no extra words."
-      ),
-      new HumanMessage(`Word: "${clean}"`),
+      new SystemMessage(systemPrompt),
+      new HumanMessage(givenIpa ? `Word: "${clean}", IPA: "${givenIpa}"` : `Word: "${clean}"`),
     ];
 
     const response = await model.invoke(messages);
@@ -94,7 +99,6 @@ export async function fetchAiBengaliPronunciationLC(
 
     return extractBengali(content);
   } catch (err) {
-    // Silently fail so the caller can try fallback tiers
     console.error("[ai-phonetics] LangChain call failed:", (err as Error).message);
     return null;
   }
@@ -108,13 +112,17 @@ const FALLBACK_MODELS = [
 ];
 
 export async function fetchAiBengaliPronunciationWithFallback(
-  word: string
+  word: string,
+  accent: 'uk' | 'us' = 'uk',
+  givenIpa?: string
 ): Promise<string | null> {
   const clean = word.replace(/[^a-zA-Z]/g, "").trim().toLowerCase();
   if (!clean) return null;
 
   const apiKey = process.env.AI_API_KEY || process.env.OPENROUTER_API_KEY || "";
   if (!apiKey) return null;
+
+  const accentDesc = accent === 'us' ? "General American English (US)" : "British English (UK)";
 
   for (const modelName of FALLBACK_MODELS) {
     try {
@@ -135,11 +143,9 @@ export async function fetchAiBengaliPronunciationWithFallback(
 
       const response = await model.invoke([
         new SystemMessage(
-          "You are an expert English-to-Bengali phonetician. " +
-            "Given an English word, write its natural British English pronunciation in Bengali script. " +
-            "Return ONLY the Bengali pronunciation word. No English, no explanation."
+          `You are an expert English-to-Bengali phonetician. Given an English word, write its natural ${accentDesc} pronunciation in Bengali script. Return ONLY the Bengali pronunciation word. No English, no explanation.`
         ),
-        new HumanMessage(`Word: "${clean}"`),
+        new HumanMessage(givenIpa ? `Word: "${clean}", IPA: "${givenIpa}"` : `Word: "${clean}"`),
       ]);
 
       let content =
@@ -153,11 +159,9 @@ export async function fetchAiBengaliPronunciationWithFallback(
 
       const bengali = extractBengali(content);
       if (bengali) {
-        console.log(`[ai-phonetics] Got pronunciation from model: ${modelName}`);
         return bengali;
       }
     } catch (err) {
-      console.warn(`[ai-phonetics] Model ${modelName} failed:`, (err as Error).message);
       // continue to next fallback
     }
   }

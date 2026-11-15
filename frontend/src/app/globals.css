@@ -53,16 +53,25 @@ body {
 /* Smooth momentum scrolling for containers */
 .smooth-scroll-container {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
   touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 rgba(241, 245, 249, 0.85);
+}
+
+.dark .smooth-scroll-container {
+  scrollbar-color: #475569 rgba(30, 41, 59, 0.65);
 }
 
 /* Dedicated high-visibility scrollbar for Reading Room */
 .reader-scroll-area {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
   touch-action: pan-y;
-  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #818cf8 rgba(241, 245, 249, 0.9);
+}
+
+.dark .reader-scroll-area {
+  scrollbar-color: #6366f1 rgba(30, 41, 59, 0.8);
 }
 
 .reader-scroll-area::-webkit-scrollbar {

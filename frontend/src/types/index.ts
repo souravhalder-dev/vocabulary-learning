@@ -15,6 +15,15 @@ export interface DocumentItem {
   created_at: string;
 }
 
+export type AccentType = 'uk' | 'us';
+
+export interface AccentPronunciation {
+  ipa: string;
+  bengali_pronunciation: string;
+  audio_url?: string;
+  source: 'dictionary_verified' | 'ai_verified' | 'rule_fallback' | 'unavailable';
+}
+
 export interface WordRelationItem {
   word: string;
   bengali_pronunciation: string;
@@ -25,10 +34,18 @@ export interface VocabularyItem {
   id: number;
   word: string;
   original_word: string;
+  // Default (UK) pronunciation
   bengali_pronunciation: string;
   bengali_meaning: string;
   english_definition: string;
   ipa_phonetic?: string;
+  audio_url?: string;
+
+  // Dual Accent Pronunciation Data (British English UK default vs American English US alternative)
+  active_accent?: AccentType;
+  pronunciation_uk?: AccentPronunciation;
+  pronunciation_us?: AccentPronunciation;
+
   part_of_speech?: string;
   example_sentence?: string;
   bengali_example?: string;

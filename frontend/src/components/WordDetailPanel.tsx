@@ -14,10 +14,11 @@ import {
   ArrowRight,
   Split,
   Layers,
-  HelpCircle
+  HelpCircle,
+  Radio
 } from 'lucide-react';
-import { VocabularyItem, WordRelationItem } from '../types';
-import { speakEnglishText } from '../lib/speech';
+import { VocabularyItem, WordRelationItem, AccentType } from '../types';
+import { playNativeAudioOrSpeak, stopSpeaking } from '../lib/speech';
 
 interface WordDetailPanelProps {
   vocabulary: VocabularyItem | null;
@@ -39,6 +40,7 @@ export const WordDetailPanel: React.FC<WordDetailPanelProps> = ({
   const [selectedSpeed, setSelectedSpeed] = useState<number>(0.85);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [activeAudioWord, setActiveAudioWord] = useState<string | null>(null);
+  const [activeAccent, setActiveAccent] = useState<AccentType>('uk');
 
   if (!vocabulary) {
     return (
@@ -46,18 +48,35 @@ export const WordDetailPanel: React.FC<WordDetailPanelProps> = ({
         <BookOpen className="mb-3 h-10 w-10 text-slate-300 dark:text-slate-600 animate-pulse" />
         <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tap Any English Word to Explore</p>
         <p className="bengali-text text-xs mt-1 text-slate-400 max-w-xs">
-          যেকোনো শব্দ স্পর্শ করলেই বাংলা উচ্চারণ, অর্থ, সমার্থক (Synonyms) ও বিপরীতার্থক (Antonyms) শব্দসমূহ দেখতে পাবেন।
+          যেকোনো শব্দ স্পর্শ করলেই ব্রিটিশ (UK) ও আমেরিকান (US) উচ্চারণ, বাংলা অর্থ, সমার্থক ও বিপরীতার্থক শব্দ দেখতে পাবেন।
         </p>
       </div>
     );
   }
 
+  // Active accent pronunciation resolution (defaults to UK British English)
+  const currentPron = activeAccent === 'uk'
+    ? (vocabulary.pronunciation_uk || {
+        ipa: vocabulary.ipa_phonetic || '',
+        bengali_pronunciation: vocabulary.bengali_pronunciation,
+        audio_url: vocabulary.audio_url,
+        source: 'dictionary_verified' as const
+      })
+    : (vocabulary.pronunciation_us || {
+        ipa: vocabulary.ipa_phonetic || '',
+        bengali_pronunciation: vocabulary.bengali_pronunciation,
+        audio_url: vocabulary.audio_url,
+        source: 'dictionary_verified' as const
+      });
+
   const handlePlayAudio = (wordToSpeak: string, rate: number = 0.85) => {
     setSelectedSpeed(rate);
     setIsPlaying(true);
     setActiveAudioWord(wordToSpeak);
-    speakEnglishText(wordToSpeak, {
+    playNativeAudioOrSpeak(wordToSpeak, {
       rate: rate,
+      accent: activeAccent,
+      audioUrl: currentPron.audio_url,
       onEnd: () => {
         setIsPlaying(false);
         setActiveAudioWord(null);
@@ -124,21 +143,70 @@ export const WordDetailPanel: React.FC<WordDetailPanelProps> = ({
               </span>
             )}
           </div>
-          {vocabulary.ipa_phonetic && (
-            <p className="text-xs font-mono text-slate-400 dark:text-slate-500 mt-1">
-              {vocabulary.ipa_phonetic}
+          {currentPron.ipa && (
+            <p className="text-xs font-mono text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-2">
+              <span>{currentPron.ipa}</span>
+              <span className="text-[10px] uppercase font-sans font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                {activeAccent.toUpperCase()} IPA
+              </span>
             </p>
           )}
+        </div>
+
+        {/* Accent Selector (UK British English default vs US American English alternative) */}
+        <div className="flex items-center justify-between p-2 rounded-2xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 pl-1.5 flex items-center gap-1.5">
+            <Radio className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
+            <span>উচ্চারণ (Accent)</span>
+          </span>
+          <div className="flex items-center rounded-xl bg-white dark:bg-slate-900 p-0.5 shadow-2xs border border-slate-200/60 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => setActiveAccent('uk')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                activeAccent === 'uk'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+              title="British English (UK) - Default Accent"
+            >
+              <span>🇬🇧 UK</span>
+              <span className="text-[9px] opacity-80 font-normal hidden sm:inline">(British)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveAccent('us')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                activeAccent === 'us'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+              title="American English (US) - Alternative Accent"
+            >
+              <span>🇺🇸 US</span>
+              <span className="text-[9px] opacity-80 font-normal hidden sm:inline">(American)</span>
+            </button>
+          </div>
         </div>
 
         {/* Primary Bengali Pronunciation Card (বাংলা উচ্চারণ) */}
         <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50/80 via-white to-violet-50/50 p-4 shadow-2xs dark:border-indigo-950/70 dark:from-indigo-950/40 dark:via-slate-900 dark:to-violet-950/20">
           <div className="flex items-center justify-between text-xs font-semibold text-indigo-700 dark:text-indigo-400 mb-1">
-            <span>বাংলা উচ্চারণ (Pronunciation)</span>
-            <span className="text-[10px] font-mono uppercase bg-indigo-100/60 dark:bg-indigo-900/60 px-1.5 py-0.5 rounded text-indigo-800 dark:text-indigo-300">Phonetic</span>
+            <span className="flex items-center gap-1.5">
+              <span>বাংলা উচ্চারণ ({activeAccent.toUpperCase()})</span>
+            </span>
+            <span className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded font-bold ${
+              currentPron.source === 'dictionary_verified'
+                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300'
+                : currentPron.source === 'ai_verified'
+                ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300'
+                : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+            }`}>
+              {currentPron.source === 'dictionary_verified' ? 'Dictionary' : currentPron.source === 'ai_verified' ? 'AI Verified' : 'Phonetic'}
+            </span>
           </div>
           <p className="bengali-text text-2xl sm:text-3xl font-bold tracking-wide text-indigo-900 dark:text-indigo-200">
-            {vocabulary.bengali_pronunciation || 'উচ্চারণ লোড হচ্ছে...'}
+            {currentPron.bengali_pronunciation || 'উচ্চারণ লোড হচ্ছে...'}
           </p>
         </div>
 
@@ -152,12 +220,12 @@ export const WordDetailPanel: React.FC<WordDetailPanelProps> = ({
           </p>
         </div>
 
-        {/* Audio Pronunciation Controls with Speed Options */}
+        {/* Audio Pronunciation Controls with Native Audio & Speed Options */}
         <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-850/40 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
               <Volume2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-              <span>Slow & Clear Pronunciation</span>
+              <span>{activeAccent.toUpperCase()} Audio ({currentPron.audio_url ? 'Native Speaker' : 'Natural Voice'})</span>
             </span>
             <button
               onClick={() => handlePlayAudio(vocabulary.word, selectedSpeed)}

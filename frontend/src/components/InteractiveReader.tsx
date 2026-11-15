@@ -16,9 +16,9 @@ import {
   Pause,
   X
 } from 'lucide-react';
-import { DocumentItem, VocabularyItem, WordRelationItem } from '../types';
+import { DocumentItem, VocabularyItem, WordRelationItem, AccentType } from '../types';
 import { lookupAndAutoSaveWord, updateReadingProgress } from '../lib/api';
-import { speakEnglishText } from '../lib/speech';
+import { playNativeAudioOrSpeak, speakEnglishText } from '../lib/speech';
 
 interface InteractiveReaderProps {
   document: DocumentItem;
@@ -57,6 +57,7 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
   const [popupAlign, setPopupAlign] = useState<'center' | 'left' | 'right'>('center');
   const [popupVertical, setPopupVertical] = useState<'above' | 'below'>('above');
   const [loadingWord, setLoadingWord] = useState<string | null>(null);
+  const [mobileAccent, setMobileAccent] = useState<AccentType>('uk');
   const audioSpeed = 0.85;
 
   const contentScrollRef = useRef<HTMLDivElement>(null);
@@ -237,8 +238,8 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
       }
     }
 
-    // Instant audio pronunciation
-    speakEnglishText(clean, { rate: audioSpeed });
+    // Instant audio pronunciation in active accent
+    playNativeAudioOrSpeak(clean, { accent: mobileAccent, rate: audioSpeed });
 
     try {
       const vocab = await lookupAndAutoSaveWord(
@@ -345,42 +346,98 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
                         <span className="text-xs text-slate-300 bengali-text">বাংলা অর্থ ও উচ্চারণ খোঁজা হচ্ছে...</span>
                       </div>
                     ) : selectedWordVocab && selectedWordVocab.word.toLowerCase() === lower ? (
-                      <div className="space-y-1">
-                        {/* Bengali Pronunciation Header */}
-                        <div className="flex items-center justify-between gap-1.5">
-                          <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="space-y-1.5">
+                        {/* Header: Accent Selector (UK default / US alternative), Audio Play, and Close */}
+                        <div className="flex items-center justify-between gap-1 pb-1 border-b border-slate-800">
+                          {/* Accent Selector */}
+                          <div className="flex items-center bg-slate-800 rounded-md p-0.5 text-[10px] font-semibold">
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                speakEnglishText(selectedWordVocab.word, { rate: audioSpeed });
+                                setMobileAccent('uk');
                               }}
-                              className="shrink-0 p-1 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white transition-transform active:scale-90"
-                              title="Listen"
+                              className={`px-1.5 py-0.5 rounded transition-all ${
+                                mobileAccent === 'uk'
+                                  ? 'bg-indigo-600 text-white font-bold shadow-xs'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                              title="British English (UK)"
+                            >
+                              🇬🇧 UK
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMobileAccent('us');
+                              }}
+                              className={`px-1.5 py-0.5 rounded transition-all ${
+                                mobileAccent === 'us'
+                                  ? 'bg-indigo-600 text-white font-bold shadow-xs'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                              title="American English (US)"
+                            >
+                              🇺🇸 US
+                            </button>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            {/* Native Speaker Audio Playback */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const audioUrl = mobileAccent === 'uk'
+                                  ? selectedWordVocab.pronunciation_uk?.audio_url
+                                  : selectedWordVocab.pronunciation_us?.audio_url;
+                                playNativeAudioOrSpeak(selectedWordVocab.word, {
+                                  accent: mobileAccent,
+                                  audioUrl: audioUrl || undefined,
+                                  rate: audioSpeed,
+                                });
+                              }}
+                              className="p-1 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white transition-transform active:scale-90"
+                              title={`উচ্চারণ শুনুন (${mobileAccent === 'uk' ? 'British' : 'American'})`}
                             >
                               <Volume2 className="h-3 w-3" />
                             </button>
 
-                            <div className="min-w-0 flex items-center gap-1">
-                              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-medium shrink-0">উচ্চারণ:</span>
-                              <span className="bengali-text font-bold text-amber-300 text-xs sm:text-sm tracking-wide truncate">
-                                {selectedWordVocab.bengali_pronunciation}
-                              </span>
-                            </div>
+                            {/* Close Button */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveWord(null);
+                                onClearSelectedWord?.();
+                              }}
+                              className="shrink-0 text-slate-400 hover:text-white p-0.5 rounded-md hover:bg-slate-800"
+                              title="Close"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
                           </div>
+                        </div>
 
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveWord(null);
-                              onClearSelectedWord?.();
-                            }}
-                            className="shrink-0 text-slate-400 hover:text-white p-0.5 rounded-md hover:bg-slate-800"
-                            title="Close"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
+                        {/* Bengali Pronunciation & IPA (Accent-Specific) */}
+                        <div className="flex items-baseline gap-1.5 flex-wrap">
+                          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-medium shrink-0">উচ্চারণ:</span>
+                          <span className="bengali-text font-bold text-amber-300 text-xs sm:text-sm tracking-wide">
+                            {mobileAccent === 'uk'
+                              ? (selectedWordVocab.pronunciation_uk?.bengali_pronunciation || selectedWordVocab.bengali_pronunciation)
+                              : (selectedWordVocab.pronunciation_us?.bengali_pronunciation || selectedWordVocab.bengali_pronunciation)}
+                          </span>
+                          {(mobileAccent === 'uk'
+                            ? (selectedWordVocab.pronunciation_uk?.ipa || selectedWordVocab.ipa_phonetic)
+                            : (selectedWordVocab.pronunciation_us?.ipa || selectedWordVocab.ipa_phonetic)) && (
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              /{(mobileAccent === 'uk'
+                                ? (selectedWordVocab.pronunciation_uk?.ipa || selectedWordVocab.ipa_phonetic)
+                                : (selectedWordVocab.pronunciation_us?.ipa || selectedWordVocab.ipa_phonetic)
+                              )?.replace(/^\/|\/$/g, '')}/
+                            </span>
+                          )}
                         </div>
 
                         {/* Bengali Meaning: in a smaller font directly below Bengali pronunciation */}
@@ -542,15 +599,14 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
       <div 
         ref={contentScrollRef}
         onScroll={handleScroll}
-        onWheel={() => { if (isAutoScrolling) stopAutoScroll(); }}
-        onTouchMove={() => { if (isAutoScrolling) stopAutoScroll(); }}
         onClick={() => {
           if (activeWord) {
             setActiveWord(null);
             onClearSelectedWord?.();
           }
         }}
-        className="flex-1 min-h-0 overflow-y-auto reader-scroll-area smooth-scroll-container px-4 py-6 sm:px-10 lg:px-14 w-full pb-28"
+        className="flex-1 min-h-0 overflow-y-scroll reader-scroll-area smooth-scroll-container px-4 py-6 sm:px-10 lg:px-14 w-full pb-36"
+        style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
       >
         <div className="max-w-4xl mx-auto w-full">
         {/* Interactive Helper Banner */}
@@ -574,6 +630,22 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
             </p>
           ))}
         </div>
+
+        {/* Multi-page Next Page Navigation (if article has multiple pages) */}
+        {totalPages > 1 && currentPage < totalPages && (
+          <div className="mt-8 mb-4 flex justify-center">
+            <button
+              onClick={() => {
+                setCurrentPage((p) => Math.min(totalPages, p + 1));
+                scrollToTop();
+              }}
+              className="flex items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-indigo-500 transition-all active:scale-95"
+            >
+              <span className="bengali-text">পরের পৃষ্ঠা পড়ুন (Page {currentPage + 1}/{totalPages})</span>
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Article End Card */}
         <div className="mt-12 mb-8 rounded-2xl border border-dashed border-slate-200 p-6 text-center text-xs text-slate-400 dark:border-slate-800 space-y-1">
