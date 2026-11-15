@@ -11,7 +11,8 @@ import {
   Sparkles,
   Menu,
   X,
-  UploadCloud
+  UploadCloud,
+  GraduationCap
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -31,6 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'english-language', label: 'English Language', icon: GraduationCap, badge: 'BCS' },
     { id: 'library', label: 'My Library', icon: Library },
     { id: 'reader', label: 'Reading Room', icon: BookOpenText },
     { id: 'notebook', label: 'Vocabulary Notebook', icon: BookmarkCheck, badge: vocabCount },
@@ -73,8 +75,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <Icon className={`h-4 w-4 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`} />
                     <span>{item.label}</span>
                   </div>
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-bold text-indigo-700 dark:bg-indigo-900/80 dark:text-indigo-300">
+                  {item.badge !== undefined && (typeof item.badge === 'string' ? item.badge.length > 0 : item.badge > 0) && (
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                      typeof item.badge === 'string'
+                        ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                        : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/80 dark:text-indigo-300'
+                    }`}>
                       {item.badge}
                     </span>
                   )}
@@ -100,6 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-slate-200/90 bg-white/95 px-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 shadow-lg">
         {[
           { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+          { id: 'english-language', label: 'Grammar', icon: GraduationCap },
           { id: 'reader', label: 'Reader', icon: BookOpenText },
           { id: 'notebook', label: 'Notebook', icon: BookmarkCheck, badge: vocabCount },
           { id: 'translator', label: 'Translate', icon: Languages },

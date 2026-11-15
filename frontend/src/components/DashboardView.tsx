@@ -16,7 +16,8 @@ import {
   TrendingUp,
   BrainCircuit,
   Layers,
-  BookOpenText
+  BookOpenText,
+  GraduationCap
 } from 'lucide-react';
 import { DocumentItem, VocabularyItem, DashboardStats } from '../types';
 import { speakEnglishText } from '../lib/speech';
@@ -32,6 +33,7 @@ interface DashboardViewProps {
   onNavigateToNotebook: () => void;
   onNavigateToReader?: () => void;
   onStartFlashcards?: () => void;
+  onNavigateToEnglishLanguage?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -45,6 +47,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigateToNotebook,
   onNavigateToReader,
   onStartFlashcards,
+  onNavigateToEnglishLanguage,
 }) => {
   const latestDoc = recentDocs[0];
   const percentLearned = stats.total_vocabularies > 0 
@@ -69,6 +72,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <div className="flex flex-wrap items-center gap-2.5 pt-2">
             <button
+              onClick={onNavigateToEnglishLanguage}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 px-4 py-2.5 text-xs font-bold text-white shadow-md transition-all active:scale-95"
+            >
+              <GraduationCap className="h-4 w-4" />
+              <span>English Language (BCS Grammar)</span>
+            </button>
+            <button
               onClick={onOpenImport}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 px-4 py-2.5 text-xs font-bold text-white shadow-md transition-colors"
             >
@@ -89,8 +99,57 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
       </div>
 
+      {/* Featured Banner: English Language & BCS Grammar Learning Section */}
+      <div 
+        onClick={onNavigateToEnglishLanguage}
+        className="relative overflow-hidden rounded-3xl border border-indigo-200/80 bg-gradient-to-r from-indigo-900 via-slate-900 to-violet-950 p-6 sm:p-7 text-white shadow-lg cursor-pointer hover:border-indigo-400 transition-all group"
+      >
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-2 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-rose-500/30 px-3 py-0.5 text-xs font-bold text-rose-300 border border-rose-400/30 flex items-center gap-1.5">
+                <GraduationCap className="h-3.5 w-3.5" />
+                <span>নতুন সংযোজন • BCS & Competitive Grammar</span>
+              </span>
+              <span className="rounded-full bg-indigo-500/30 px-2.5 py-0.5 text-xs font-bold text-indigo-300 border border-indigo-400/30">
+                Lectures 01-16
+              </span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white group-hover:text-indigo-200 transition-colors">
+              English Language: অধ্যায়ভিত্তিক পূর্ণাঙ্গ পাঠ্যবই ও বিগত ১০ বছরের বিসিএস প্রশ্ন ব্যবচ্ছেদ
+            </h2>
+            <p className="bengali-text text-xs sm:text-sm text-indigo-100/90 leading-relaxed font-normal">
+              সহজ বাংলায় প্রতিটি নিয়মের ব্যাখ্যা, গাণিতিক ফর্মুলা, বাস্তব উদাহরণ, সঠিক বনাম ভুল বাক্যের তুলনা, পরীক্ষকের ফাঁদ এবং ৩৫তম থেকে ৪৬তম বিসিএসের প্রতিটি প্রশ্নের কারণভিত্তিক সমাধান।
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="self-start md:self-center shrink-0 flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-xs sm:text-sm font-bold text-indigo-950 shadow-md group-hover:bg-indigo-50 transition-all active:scale-95"
+          >
+            <span>অধ্যায়ন শুরু করুন</span>
+            <ArrowRight className="h-4 w-4 text-indigo-600 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+
+        {/* Decorative elements */}
+        <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-indigo-500/10 blur-2xl pointer-events-none" />
+      </div>
+
       {/* Mobile-First Quick Tool Launchpad (1-tap access on any smartphone, tablet, or PC) */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <button
+          onClick={onNavigateToEnglishLanguage}
+          className="flex flex-col justify-between rounded-2xl border border-rose-100 bg-white p-3.5 sm:p-4 text-left shadow-2xs transition-all hover:border-rose-300 hover:shadow-md dark:border-rose-950/60 dark:bg-slate-900 group"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/70 dark:text-rose-400 mb-2 group-hover:scale-105 transition-transform">
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">English Language</div>
+            <p className="bengali-text text-[11px] text-slate-500 line-clamp-1 mt-0.5">বিসিএস গ্রামার পাঠ্যবই</p>
+          </div>
+        </button>
         <button
           onClick={() => (onNavigateToReader ? onNavigateToReader() : latestDoc && onSelectDocument(latestDoc))}
           className="flex flex-col justify-between rounded-2xl border border-indigo-100 bg-white p-3.5 sm:p-4 text-left shadow-2xs transition-all hover:border-indigo-300 hover:shadow-md dark:border-indigo-950/60 dark:bg-slate-900 group"

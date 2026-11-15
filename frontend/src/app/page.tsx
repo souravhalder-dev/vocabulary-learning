@@ -14,6 +14,7 @@ import { ImportModal } from '../components/ImportModal';
 import { AiAssistantDrawer } from '../components/AiAssistantDrawer';
 import { TranslationHistoryView } from '../components/TranslationHistoryView';
 import { SettingsView } from '../components/SettingsView';
+import { EnglishLanguageView } from '../components/grammar/EnglishLanguageView';
 
 import { DocumentItem, VocabularyItem, TranslationItem, DashboardStats } from '../types';
 import { 
@@ -194,7 +195,7 @@ export default function Home() {
   };
 
   return (
-    <div className={`min-h-screen ${activeTab === 'reader' ? 'h-dvh max-h-dvh overflow-hidden' : 'pb-20 md:pb-0'} flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100`}>
+    <div className={`min-h-screen ${activeTab === 'reader' || activeTab === 'english-language' ? 'h-dvh max-h-dvh overflow-hidden' : 'pb-20 md:pb-0'} flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100`}>
       {/* Top Navigation */}
       <Navbar
         onOpenImport={() => setShowImportModal(true)}
@@ -211,7 +212,7 @@ export default function Home() {
       />
 
       {/* Main Workspace */}
-      <div className={`flex flex-1 min-h-0 ${activeTab === 'reader' ? 'overflow-hidden pb-16 md:pb-0' : 'overflow-hidden'}`}>
+      <div className={`flex flex-1 min-h-0 ${activeTab === 'reader' || activeTab === 'english-language' ? 'overflow-hidden pb-16 md:pb-0' : 'overflow-hidden'}`}>
         {/* Left Sidebar */}
         <Sidebar
           activeTab={activeTab}
@@ -223,7 +224,7 @@ export default function Home() {
         {/* Center Workspace Content */}
         <main
           className={`flex-1 min-h-0 ${
-            activeTab === 'reader'
+            activeTab === 'reader' || activeTab === 'english-language'
               ? 'overflow-hidden p-2 sm:p-3 lg:p-4 flex flex-col'
               : 'overflow-y-auto p-3 sm:p-6 lg:p-8'
           } max-w-7xl mx-auto w-full`}
@@ -246,7 +247,14 @@ export default function Home() {
               onNavigateToNotebook={() => setActiveTab('notebook')}
               onNavigateToReader={() => setActiveTab('reader')}
               onStartFlashcards={() => setShowFlashcards(true)}
+              onNavigateToEnglishLanguage={() => setActiveTab('english-language')}
             />
+          )}
+
+          {activeTab === 'english-language' && (
+            <div className="flex-1 min-h-0 h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+              <EnglishLanguageView />
+            </div>
           )}
 
           {activeTab === 'library' && (
