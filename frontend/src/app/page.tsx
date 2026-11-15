@@ -221,7 +221,13 @@ export default function Home() {
         />
 
         {/* Center Workspace Content */}
-        <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        <main
+          className={`flex-1 ${
+            activeTab === 'reader'
+              ? 'overflow-hidden p-2 sm:p-4 lg:p-6'
+              : 'overflow-y-auto p-3 sm:p-6 lg:p-8'
+          } max-w-7xl mx-auto w-full`}
+        >
           {activeTab === 'dashboard' && (
             <DashboardView
               stats={stats}
@@ -253,9 +259,9 @@ export default function Home() {
           )}
 
           {activeTab === 'reader' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 h-[calc(100dvh-8rem)] sm:h-[calc(100vh-7rem)]">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 h-full min-h-0">
               {/* Left/Center Main Reading Area */}
-              <div className="lg:col-span-8 h-full">
+              <div className="lg:col-span-8 h-full min-h-0">
                 {selectedDoc ? (
                   <InteractiveReader
                     document={selectedDoc}
@@ -285,7 +291,7 @@ export default function Home() {
               </div>
 
               {/* Right Side Vocabulary Popup / Details Panel */}
-              <div className="hidden lg:block lg:col-span-4 h-full rounded-2xl shadow-sm overflow-hidden border border-slate-200 dark:border-slate-800">
+              <div className="hidden lg:block lg:col-span-4 h-full min-h-0 rounded-2xl shadow-sm overflow-hidden border border-slate-200 dark:border-slate-800">
                 <WordDetailPanel
                   vocabulary={selectedWordVocab}
                   onToggleLearned={handleToggleWordLearned}

@@ -4,11 +4,16 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   ChevronLeft, 
   ChevronRight, 
+  ChevronUp,
+  ChevronDown,
   Sparkles, 
   Volume2,
   Check,
   Languages,
   ArrowUp,
+  ArrowDown,
+  Play,
+  Pause,
   X
 } from 'lucide-react';
 import { DocumentItem, VocabularyItem, WordRelationItem } from '../types';
@@ -44,6 +49,9 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
   const [copiedSentence, setCopiedSentence] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState<number>(0);
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
+  const [isAutoScrolling, setIsAutoScrolling] = useState<boolean>(false);
+  const autoScrollSpeedRef = useRef<number>(0.9); // smooth px per frame
+  const autoScrollAnimRef = useRef<number | null>(null);
 
   // Mobile contextual inline popup positioning
   const [popupAlign, setPopupAlign] = useState<'center' | 'left' | 'right'>('center');
@@ -90,10 +98,109 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
   };
 
   const scrollToTop = () => {
+    stopAutoScroll();
     if (contentScrollRef.current) {
       contentScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  const scrollToBottom = () => {
+    stopAutoScroll();
+    if (contentScrollRef.current) {
+      contentScrollRef.current.scrollTo({
+        top: contentScrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollByAmount = (amount: number) => {
+    stopAutoScroll();
+    if (contentScrollRef.current) {
+      contentScrollRef.current.scrollBy({ top: amount, behavior: 'smooth' });
+    }
+  };
+
+  const stopAutoScroll = () => {
+    setIsAutoScrolling(false);
+    if (autoScrollAnimRef.current) {
+      cancelAnimationFrame(autoScrollAnimRef.current);
+      autoScrollAnimRef.current = null;
+    }
+  };
+
+  const toggleAutoScroll = () => {
+    if (isAutoScrolling) {
+      stopAutoScroll();
+    } else {
+      setIsAutoScrolling(true);
+    }
+  };
+
+  // Auto-scroll loop
+  useEffect(() => {
+    if (!isAutoScrolling) return;
+
+    let lastTime = performance.now();
+    const step = (time: number) => {
+      const delta = (time - lastTime) / 16.6;
+      lastTime = time;
+
+      if (contentScrollRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = contentScrollRef.current;
+        if (scrollTop + clientHeight >= scrollHeight - 3) {
+          stopAutoScroll();
+          return;
+        }
+        contentScrollRef.current.scrollTop += autoScrollSpeedRef.current * delta;
+      }
+      autoScrollAnimRef.current = requestAnimationFrame(step);
+    };
+
+    autoScrollAnimRef.current = requestAnimationFrame(step);
+    return () => {
+      if (autoScrollAnimRef.current) {
+        cancelAnimationFrame(autoScrollAnimRef.current);
+      }
+    };
+  }, [isAutoScrolling]);
+
+  // Click on scrub progress bar to jump anywhere in the article
+  const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    stopAutoScroll();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    if (contentScrollRef.current) {
+      const target = (contentScrollRef.current.scrollHeight - contentScrollRef.current.clientHeight) * ratio;
+      contentScrollRef.current.scrollTo({ top: target, behavior: 'smooth' });
+    }
+  };
+
+  // Keyboard navigation for hands-free reading
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        scrollByAmount(e.shiftKey ? -320 : 320);
+      } else if (e.code === 'PageDown') {
+        e.preventDefault();
+        scrollByAmount(420);
+      } else if (e.code === 'PageUp') {
+        e.preventDefault();
+        scrollByAmount(-420);
+      } else if (e.code === 'Home') {
+        e.preventDefault();
+        scrollToTop();
+      } else if (e.code === 'End') {
+        e.preventDefault();
+        scrollToBottom();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Handle word click with collision detection for mobile inline popup
   const handleWordClick = async (rawWord: string, surroundingSentence: string, e?: React.MouseEvent) => {
@@ -344,9 +451,9 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
   };
 
   return (
-    <div className="relative flex h-full flex-col justify-between bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
+    <div className="relative flex h-full min-h-0 flex-col bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
       {/* Sticky Reader Toolbar */}
-      <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between border-b border-slate-200/80 bg-white/90 px-3.5 sm:px-6 py-2.5 dark:border-slate-800 dark:bg-slate-900/90 backdrop-blur-md gap-2">
+      <div className="shrink-0 z-20 flex flex-wrap items-center justify-between border-b border-slate-200/80 bg-white/95 px-3.5 sm:px-6 py-2.5 dark:border-slate-800 dark:bg-slate-900/95 backdrop-blur-md gap-2">
         {/* Title & Document Badge */}
         <div className="flex items-center gap-2 overflow-hidden max-w-[65%] sm:max-w-none">
           <span className="rounded-lg bg-indigo-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 shrink-0">
@@ -411,26 +518,35 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
         </div>
       </div>
 
-      {/* Real-time Reading Progress Bar */}
-      <div className="h-1 w-full bg-slate-100 dark:bg-slate-800">
+      {/* Interactive Scrubbable Reading Progress Bar */}
+      <div 
+        onClick={handleProgressBarClick}
+        className="shrink-0 h-1.5 w-full bg-slate-100 dark:bg-slate-800 hover:h-2.5 cursor-pointer transition-all group/scrub relative"
+        title="ক্লিক করে লেখার যেকোনো অংশে স্ক্রোল করুন (Click to scrub)"
+      >
         <div
-          className="h-full bg-gradient-to-r from-indigo-500 via-violet-500 to-emerald-500 transition-all duration-150"
+          className="h-full bg-gradient-to-r from-indigo-500 via-violet-500 to-emerald-500 transition-all duration-100 relative"
           style={{ width: `${scrollProgress}%` }}
-        />
+        >
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full shadow border border-indigo-600 opacity-0 group-hover/scrub:opacity-100 transition-opacity" />
+        </div>
       </div>
 
       {/* Main Text Content Area with Smooth Momentum Scrolling */}
       <div 
         ref={contentScrollRef}
         onScroll={handleScroll}
+        onWheel={() => { if (isAutoScrolling) stopAutoScroll(); }}
+        onTouchMove={() => { if (isAutoScrolling) stopAutoScroll(); }}
         onClick={() => {
           if (activeWord) {
             setActiveWord(null);
             onClearSelectedWord?.();
           }
         }}
-        className="flex-1 overflow-y-auto smooth-scroll-container px-4 py-6 sm:px-10 lg:px-14 max-w-4xl mx-auto w-full pb-16"
+        className="flex-1 min-h-0 overflow-y-auto reader-scroll-area smooth-scroll-container px-4 py-6 sm:px-10 lg:px-14 w-full pb-28"
       >
+        <div className="max-w-4xl mx-auto w-full">
         {/* Interactive Helper Banner */}
         <div className="mb-6 rounded-2xl bg-gradient-to-r from-indigo-50/90 to-violet-50/70 p-3.5 text-xs text-indigo-900 dark:bg-gradient-to-r dark:from-indigo-950/40 dark:to-violet-950/30 dark:text-indigo-200 flex flex-col sm:flex-row sm:items-center sm:justify-between border border-indigo-100/80 dark:border-indigo-900/40 gap-2 shadow-2xs">
           <div className="flex items-center gap-2">
@@ -462,18 +578,63 @@ export const InteractiveReader: React.FC<InteractiveReaderProps> = ({
             সংরক্ষিত শব্দগুলো ঝালাই করতে Spaced Flashcards বা Vocabulary Notebook দেখুন।
           </p>
         </div>
+        </div>
       </div>
 
-      {/* Floating Scroll To Top Button */}
-      {showScrollTop && (
+      {/* Floating Smooth Scroll Quick Control Bar */}
+      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 flex items-center gap-1 p-1 rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-xl border border-slate-200/90 dark:border-slate-800 backdrop-blur-md select-none transition-all duration-200">
+        {/* Realtime Progress Tag */}
+        <span className="px-2 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 font-mono">
+          {scrollProgress}%
+        </span>
+
+        {/* Scroll Up Button */}
         <button
-          onClick={scrollToTop}
-          className="absolute bottom-6 right-5 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 transition-all hover:scale-105 active:scale-95"
-          title="Scroll to top"
+          type="button"
+          onClick={() => scrollByAmount(-320)}
+          className="p-1.5 rounded-xl text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 dark:text-slate-300 dark:hover:text-indigo-400 dark:hover:bg-indigo-950/60 transition-colors"
+          title="উপরে স্ক্রোল করুন (Scroll Up - Alt+Up / Shift+Space)"
         >
-          <ArrowUp className="h-4 w-4" />
+          <ChevronUp className="h-4 w-4" />
         </button>
-      )}
+
+        {/* Scroll Down Button */}
+        <button
+          type="button"
+          onClick={() => scrollByAmount(320)}
+          className="p-1.5 rounded-xl text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 dark:text-slate-300 dark:hover:text-indigo-400 dark:hover:bg-indigo-950/60 transition-colors"
+          title="নিচে স্ক্রোল করুন (Scroll Down - Alt+Down / Space)"
+        >
+          <ChevronDown className="h-4 w-4" />
+        </button>
+
+        {/* Auto-Scroll Toggle */}
+        <button
+          type="button"
+          onClick={toggleAutoScroll}
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+            isAutoScrolling
+              ? 'bg-indigo-600 text-white shadow-xs animate-pulse'
+              : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200'
+          }`}
+          title={isAutoScrolling ? 'অটো-স্ক্রোল থামান (Pause)' : 'অটো-স্ক্রোল শুরু করুন (Smooth Auto-Scroll)'}
+        >
+          {isAutoScrolling ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+          <span className="hidden sm:inline">{isAutoScrolling ? 'Pause' : 'Auto'}</span>
+        </button>
+
+        {/* Back to Top Quick Action */}
+        {showScrollTop && (
+          <button
+            type="button"
+            onClick={scrollToTop}
+            className="p-1.5 rounded-xl text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/60 transition-colors border-l border-slate-200 dark:border-slate-800 pl-2 ml-0.5"
+            title="এক ক্লিকে একদম শুরুতে যান (Back to top)"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
+        )}
+      </div>
     </div>
   );
 };

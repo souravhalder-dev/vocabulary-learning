@@ -1,29 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-:root {
-  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-bengali: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
-  --font-heading: 'Outfit', 'Inter', sans-serif;
-}
-
-html {
-  scroll-behavior: smooth;
-  -webkit-tap-highlight-color: transparent;
+@layer base {
+  :root {
+    --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-bengali: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+  }
 }
 
 body {
-  font-family: var(--font-inter);
+  font-family: var(--font-heading);
   background-color: #f8fafc;
   color: #0f172a;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  touch-action: manipulation;
 }
 
 .dark body {
-  background-color: #090d16;
-  color: #f1f5f9;
+  background-color: #020617;
+  color: #f8fafc;
 }
 
 .bengali-text {
@@ -36,8 +29,8 @@ body {
 
 /* Custom smooth scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -62,6 +55,44 @@ body {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+}
+
+/* Dedicated high-visibility scrollbar for Reading Room */
+.reader-scroll-area {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
+
+.reader-scroll-area::-webkit-scrollbar {
+  width: 8px;
+}
+
+.reader-scroll-area::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.85);
+  border-radius: 9999px;
+  margin: 6px 0;
+}
+
+.dark .reader-scroll-area::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.65);
+}
+
+.reader-scroll-area::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease;
+}
+
+.dark .reader-scroll-area::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.reader-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: #6366f1;
 }
 
 /* Interactive word styling with touch-optimized targets */
@@ -89,47 +120,49 @@ body {
   transform: translateY(-1px);
 }
 
-.reader-word:active {
-  transform: scale(0.96);
-  background-color: #c7d2fe;
-}
-
 .dark .reader-word:hover {
   background-color: #312e81;
   color: #e0e7ff;
 }
 
-.dark .reader-word:active {
-  background-color: #3730a3;
+.reader-word.saved {
+  background-color: #fef3c7;
+  color: #92400e;
+  font-weight: 500;
+  border-bottom: 2px solid #f59e0b;
 }
 
-.reader-word.active-word {
-  background-color: #4f46e5;
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
-  font-weight: 600;
+.dark .reader-word.saved {
+  background-color: #78350f;
+  color: #fef3c7;
+  border-bottom: 2px solid #d97706;
 }
 
-.reader-word.learned-word {
+.reader-word.learned {
+  background-color: #d1fae5;
+  color: #065f46;
+  font-weight: 500;
   border-bottom: 2px solid #10b981;
 }
 
-.reader-word.saved-word {
-  border-bottom: 2px solid #6366f1;
+.dark .reader-word.learned {
+  background-color: #064e3b;
+  color: #d1fae5;
+  border-bottom: 2px solid #059669;
 }
 
-/* Mobile bottom sheet animations */
-@keyframes slideUpSheet {
-  from {
-    transform: translateY(100%);
-    opacity: 0.5;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+.reader-word.active {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px #818cf8;
 }
 
-.animate-slide-up {
-  animation: slideUpSheet 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Card hover glow effects */
+.glow-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glow-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -10px rgba(99, 102, 241, 0.15);
 }
