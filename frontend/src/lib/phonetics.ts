@@ -967,6 +967,14 @@ export async function fetchAccuratePronunciationOnline(word: string): Promise<st
     return COMMON_PRONUNCIATION_DICT[clean];
   }
 
+  // 2. High-Accuracy AI-Powered Phonetic Analysis
+  try {
+    const aiPron = await fetchAiBengaliPronunciation(clean);
+    if (aiPron) {
+      return aiPron;
+    }
+  } catch {}
+
   // 2. Free Dictionary API (Oxford/Cambridge IPA)
   try {
     const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${clean}`, {
@@ -1075,4 +1083,64 @@ export async function transliterateSentenceToBengaliAsync(sentence: string): Pro
   }
 
   return out.join("").trim();
+}
+
+
+export async function fetchAiBengaliPronunciation(word: string): Promise<string | null> {
+  const clean = word.replace(/[^a-zA-Z]/g, "").trim().toLowerCase();
+  if (!clean) return null;
+
+  const apiKey = process.env.AI_API_KEY || process.env.OPENROUTER_API_KEY || "";
+  if (!apiKey) return null;
+
+  const model = process.env.AI_MODEL || "nvidia/nemotron-3-ultra-550b-a55b:free";
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4500);
+
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://vocabulary-learning.app",
+        "X-Title": "Vocabulary Learning"
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert English to Bengali phonetician. When given an English word, determine its natural, accurate British English pronunciation written in Bengali script (বাংলা উচ্চারণ). Consider syllables, silent letters, and stress. Return ONLY the Bengali pronunciation word (বাংলা অক্ষরে উচ্চারণ). Do not write English letters or explanation."
+          },
+          {
+            role: "user",
+            content: `Word: "${clean}"`
+          }
+        ],
+        max_tokens: 350
+      })
+    });
+    clearTimeout(timer);
+
+    if (res.ok) {
+      const data = await res.json();
+      const choice = data.choices?.[0];
+      let content = choice?.message?.content || choice?.message?.reasoning || "";
+      if (content) {
+        content = content.replace(/```[\s\S]*?```/g, "").replace(/["'`]/g, "").trim();
+        const bengaliMatch = content.match(/[\u0980-\u09FF\s]+/);
+        if (bengaliMatch) {
+          const pron = bengaliMatch[0].trim();
+          if (pron.length >= 2 && !pron.includes("\n")) {
+            return pron;
+          }
+        }
+      }
+    }
+  } catch {
+    clearTimeout(timer);
+  }
+  return null;
 }

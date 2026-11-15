@@ -17,10 +17,66 @@ if settings.GEMINI_API_KEY:
         print(f"Warning: Could not initialize Gemini client: {e}")
 
 
+
+async def fetch_ai_bengali_pronunciation(word: str, client: httpx.AsyncClient) -> Optional[str]:
+    """
+    Calls AI model (nvidia/nemotron-3-ultra-550b-a55b:free) via OpenRouter to determine
+    accurate, standard British English pronunciation in Bengali script (বাংলা উচ্চারণ).
+    """
+    clean = re.sub(r"[^a-zA-Z]", "", word).strip().lower()
+    if not clean:
+        return None
+
+    api_key = os.getenv("AI_API_KEY") or os.getenv("OPENROUTER_API_KEY") or ""
+    model = os.getenv("AI_MODEL") or "nvidia/nemotron-3-ultra-550b-a55b:free"
+
+    try:
+        r = await client.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://vocabulary-learning.app",
+                "X-Title": "Vocabulary Learning"
+            },
+            json={
+                "model": model,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are an expert English to Bengali phonetician. When given an English word, determine its natural, accurate British English pronunciation written in Bengali script (বাংলা উচ্চারণ). Consider syllables, silent letters, and stress. Return ONLY the Bengali pronunciation word (বাংলা অক্ষরে উচ্চারণ). Do not write English letters or explanation."
+                    },
+                    {
+                        "role": "user",
+                        "content": f'Word: "{clean}"'
+                    }
+                ],
+                "max_tokens": 350
+            },
+            timeout=4.5
+        )
+        if r.status_code == 200:
+            data = r.json()
+            choice = data.get("choices", [{}])[0]
+            msg = choice.get("message", {})
+            content = msg.get("content") or msg.get("reasoning") or ""
+            if content:
+                content = re.sub(r"```[\s\S]*?```", "", content)
+                content = re.sub(r"["'`]", "", content).strip()
+                bengali_match = re.search(r"[ঀ-৿\s]+", content)
+                if bengali_match:
+                    pron = bengali_match.group(0).strip()
+                    if len(pron) >= 2 and "\n" not in pron:
+                        return pron
+    except Exception:
+        pass
+    return None
+
+
 async def fetch_accurate_word_pronunciation(word: str, client: httpx.AsyncClient) -> tuple[str, str]:
     """
-    Fetches genuine IPA phonetics from multi-source APIs (Free Dictionary API -> Datamuse API)
-    and converts to authentic standard British English Bengali pronunciation.
+    Fetches genuine IPA phonetics from AI models, verified dictionaries, and multi-source APIs
+    (AI -> Free Dictionary API -> Datamuse API) and converts to authentic standard British English Bengali pronunciation.
     Returns (bengali_pronunciation, ipa_str).
     """
     clean = re.sub(r"[^a-zA-Z]", "", word).strip().lower()
@@ -30,6 +86,11 @@ async def fetch_accurate_word_pronunciation(word: str, client: httpx.AsyncClient
     from app.services.bengali_phonetics import COMMON_PRONUNCIATION_DICT
     if clean in COMMON_PRONUNCIATION_DICT:
         return (COMMON_PRONUNCIATION_DICT[clean], "")
+
+    # AI-powered phonetic determination
+    ai_pron = await fetch_ai_bengali_pronunciation(clean, client)
+    if ai_pron:
+        return (ai_pron, "")
 
     ipa = ""
     # Primary API: Free Dictionary API (Oxford/Cambridge/Wiktionary IPA)
